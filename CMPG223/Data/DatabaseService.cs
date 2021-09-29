@@ -14,7 +14,7 @@ namespace CMPG223.Data
 
         public async Task<List<Employee>> GetEmployees()
         {
-            var sql = "Select * from employees";
+            var sql = "Select * from employees e join roles r on e.Role_Fk = r.id";
             using (var connection = new SqlConnection(DatabaseConnectionString))
             {
                 var employees = connection.Query<Employee>(sql).ToList();

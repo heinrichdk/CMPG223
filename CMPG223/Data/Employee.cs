@@ -11,5 +11,13 @@ namespace CMPG223.Data
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsActive { get; set; }
+        public string RoleName { get; set; }
+    }
+
+    public class Role
+    {
+        public int Id { get; set; }
+        public  string RoleName { get; set; }
+        public string Description { get; set; }
     }
 }

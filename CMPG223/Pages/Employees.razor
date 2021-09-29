@@ -5,37 +5,55 @@
 
 @if (employees == null)
 {
-    <p><em>Loading...</em></p>
+    <p>
+        <em>Loading...</em>
+    </p>
 }
 else
 {
     <table class="table">
         <thead>
-            <tr>
-                <th>Name</th>
-                <th>Surname</th>
-                <th>Is Active</th>
-            </tr>
+        <tr>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Role</th>
+            <th>Is Active</th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var employee in employees)
-            {
-                <tr>
-                    <td>@employee.Name</td>
-                    <td>@employee.Surname</td>
-                    <td>@employee.IsActive</td>
-                    <td>@employee.Id</td>
-                </tr>
-            }
+        @foreach (var employee in employees)
+        {
+            <tr>
+                <td>@employee.Name</td>
+                <td>@employee.Surname</td>
+                <td>@employee.RoleName</td>
+                <td>@employee.IsActive</td>
+                <td>
+                    <button @onclick="@(() => Edit(employee))">Edit</button>
+                </td>
+            </tr>
+        }
         </tbody>
     </table>
 }
+<div hidden="@isEditHidden">
+    <p>Test</p>
+</div>
 
 @code {
+    private bool isEditHidden { get; set; } = true;
     private List<Employee> employees;
+    private Employee selectedEmployee = new Employee();
 
     protected override async Task OnInitializedAsync()
     {
         employees = await dataService.GetEmployees();
     }
+
+    void Edit(Employee employee)
+    {
+        selectedEmployee = employee;
+        isEditHidden = false;
+    }
+
 }
