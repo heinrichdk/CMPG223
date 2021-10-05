@@ -1,9 +1,9 @@
 ﻿@page "/employees"
 @using CMPG223.Data
-@inject DatabaseService dataService
+@inject IDatabaseService _dataService
 <h3>Employees</h3>
 
-@if (employees == null)
+@if (_employees == null)
 {
     <p>
         <em>Loading...</em>
@@ -21,7 +21,7 @@ else
         </tr>
         </thead>
         <tbody>
-        @foreach (var employee in employees)
+        @foreach (var employee in _employees)
         {
             <tr>
                 <td>@employee.Name</td>
@@ -36,24 +36,24 @@ else
         </tbody>
     </table>
 }
-<div hidden="@isEditHidden">
+<div hidden="@_isEditHidden">
     <p>Test</p>
 </div>
 
 @code {
-    private bool isEditHidden { get; set; } = true;
-    private List<Employee> employees;
-    private Employee selectedEmployee = new Employee();
+    private bool _isEditHidden = true;
+    private List<Employee> _employees;
+    private Employee _selectedEmployee = new Employee();
 
     protected override async Task OnInitializedAsync()
     {
-        employees = await dataService.GetEmployees();
+        _employees = await _dataService.GetEmployees();
     }
 
     void Edit(Employee employee)
     {
-        selectedEmployee = employee;
-        isEditHidden = false;
+        _selectedEmployee = employee;
+        _isEditHidden = false;
     }
 
 }

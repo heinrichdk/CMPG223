@@ -8,14 +8,19 @@ using Dapper;
 
 namespace CMPG223.Data
 {
-    public class DatabaseService
+    public interface IDatabaseService
     {
-        public string DatabaseConnectionString = $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+        Task<List<Employee>> GetEmployees();
+    }
+    
+    public class DatabaseService: IDatabaseService
+    {
+        public readonly string DatabaseConnectionString = $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
 
         public async Task<List<Employee>> GetEmployees()
         {
-            var sql = "Select * from employees e join roles r on e.Role_Fk = r.id";
-            using (var connection = new SqlConnection(DatabaseConnectionString))
+            const string sql = "SELECT * FROM employees e JOIN roles r ON e.RoleFk = r.RoleId";
+            await using (var connection = new SqlConnection(DatabaseConnectionString))
             {
                 var employees = connection.Query<Employee>(sql).ToList();
 
