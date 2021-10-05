@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CMPG223.Models;
 
-namespace CMPG223.Data
+namespace CMPG223.Services
 {
     public class WeatherForecastService
     {

@@ -1,5 +1,7 @@
 ﻿@page "/employees"
-@using CMPG223.Data
+@using CMPG223.Models
+@using CMPG223.Services
+@using CMPG223.Dtos
 @inject IDatabaseService _dataService
 <h3>Employees</h3>
 
@@ -26,7 +28,7 @@ else
             <tr>
                 <td>@employee.Name</td>
                 <td>@employee.Surname</td>
-                <td>@employee.RoleName</td>
+                <td>@employee.Role.RoleName</td>
                 <td>@employee.IsActive</td>
                 <td>
                     <button @onclick="@(() => Edit(employee))">Edit</button>
@@ -42,15 +44,15 @@ else
 
 @code {
     private bool _isEditHidden = true;
-    private List<Employee> _employees;
-    private Employee _selectedEmployee = new Employee();
+    private List<EmployeeDto> _employees;
+    private EmployeeDto _selectedEmployee = new EmployeeDto();
 
     protected override async Task OnInitializedAsync()
     {
         _employees = await _dataService.GetEmployees();
     }
 
-    void Edit(Employee employee)
+    void Edit(EmployeeDto employee)
     {
         _selectedEmployee = employee;
         _isEditHidden = false;

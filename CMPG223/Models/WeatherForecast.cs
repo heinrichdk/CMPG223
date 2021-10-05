@@ -1,6 +1,6 @@
 using System;
 
-namespace CMPG223.Data
+namespace CMPG223.Models
 {
     public class WeatherForecast
     {
