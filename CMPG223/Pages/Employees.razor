@@ -2,7 +2,8 @@
 @using CMPG223.Models
 @using CMPG223.Services
 @using CMPG223.Dtos
-@inject IDatabaseService _dataService
+@using CMPG223.Controllers
+@inject IEmployeeController _employeeController
 <h3>Employees</h3>
 
 @if (_employees == null)
@@ -49,7 +50,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _employees = await _dataService.GetEmployees();
+        _employees = await _employeeController.GetEmployeeRoles();
     }
 
     void Edit(EmployeeDto employee)

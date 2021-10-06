@@ -1,3 +1,4 @@
+using CMPG223.Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ namespace CMPG223
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<IDatabaseService, DatabaseService>();
+            services.AddTransient<IEmployeeController, EmployeeController>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
