@@ -14,9 +14,14 @@
 }
 else
 {
+    <div style="float:right;">
+    <label>Search</label>
+    <input @bind="SearchText"/>
+    </div>
+
     @if (!_noUpdate)
     {
-        @if(_success)
+        @if (_success)
         {
             <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
         }
@@ -25,7 +30,7 @@ else
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
         }
     }
-    
+
     <table class="table">
         <thead>
         <tr>
@@ -58,7 +63,7 @@ else
                 </td>
             </tr>
         }
-         <h3>Add new employee</h3>
+        <h3>Add new employee</h3>
         <tr>
             <td>
                 <input @bind="_newEmployee.Name"/>
@@ -85,14 +90,21 @@ else
 
         </tbody>
     </table>
-  
-        
-       
-    
 }
 
 @code {
 
+
+    private string _searchText;
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            FilterEmployees(value);
+            _searchText = value;
+        }
+    }
     bool _noUpdate = true;
     bool _success;
     private EmployeeDto _newEmployee = new EmployeeDto();
@@ -128,6 +140,16 @@ else
 
         if (success)
             _employees = await _employeeController.GetEmployeeRoles();
+    }
+
+    private async Task FilterEmployees(string text)
+    {
+        text = text.ToLower();
+        _employees = await _employeeController.GetEmployeeRoles();
+        if (text.Length > 2)
+        {
+            _employees = _employees.FindAll(x => x.Name.ToLower().Contains(text) || x.Surname.ToLower().Contains(text) || x.Role.RoleName.ToLower().Contains(text));
+        }
     }
 
 }
