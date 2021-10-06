@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +16,9 @@ namespace CMPG223.Services
         Task<List<Employee>> GetEmployeesWhereActive();
         Task<List<Role>> GetRoles();
         Task<List<UserLogin>> GetUserLogins();
+        Task<int> UpdateEmployee(Employee employee);
+        Task<int> InsertEmployee(Employee employee);
+        
     }
 
     public class DatabaseService : IDatabaseService
@@ -33,6 +37,7 @@ namespace CMPG223.Services
                 return employees;
             }
         }
+        
 
         public async Task<List<Employee>> GetEmployeesWhereActive()
         {
@@ -70,5 +75,21 @@ namespace CMPG223.Services
             }
         }
 
+        public async Task<int> UpdateEmployee(Employee employee)
+        {
+            await using (var connection = new SqlConnection(DatabaseConnectionString))
+            {
+               return await connection.ExecuteAsync($"UPDATE Employees SET IsActive = '{employee.IsActive}', RoleFk='{employee.RoleFk}'  WHERE EmployeeId = '{employee.EmployeeId}'");
+            }
+        }
+
+        public async Task<int> InsertEmployee(Employee employee)
+        {
+            await using (var connection = new SqlConnection(DatabaseConnectionString))
+            {
+               return await connection.ExecuteAsync($"INSERT INTO Employees (Name, Surname, IsActive, RoleFK)" +
+                                              $" VALUES('{employee.Name}','{employee.Surname}','{employee.IsActive}','{employee.RoleFk}')");
+            }
+        }
     }
 }

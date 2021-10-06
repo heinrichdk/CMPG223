@@ -4,7 +4,7 @@
 @using CMPG223.Dtos
 @using CMPG223.Controllers
 @inject IEmployeeController _employeeController
-<h3>Employees</h3>
+<h2>Employees</h2>
 
 @if (_employees == null)
 {
@@ -14,6 +14,18 @@
 }
 else
 {
+    @if (!_noUpdate)
+    {
+        @if(_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
+        }
+    }
+    
     <table class="table">
         <thead>
         <tr>
@@ -29,34 +41,93 @@ else
             <tr>
                 <td>@employee.Name</td>
                 <td>@employee.Surname</td>
-                <td>@employee.Role.RoleName</td>
-                <td>@employee.IsActive</td>
                 <td>
-                    <button @onclick="@(() => Edit(employee))">Edit</button>
+                    <select @bind="employee.Role.RoleId">
+                        <option>--Select Role--</option>
+                        @foreach (var item in _roles)
+                        {
+                            <option value="@item.RoleId">@item.RoleName</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <MudCheckBox @bind-Checked="@employee.IsActive"></MudCheckBox>
+                </td>
+                <td>
+                    <MudButton @onclick="@(() => Edit(employee))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
                 </td>
             </tr>
         }
+         <h3>Add new employee</h3>
+        <tr>
+            <td>
+                <input @bind="_newEmployee.Name"/>
+            </td>
+            <td>
+                <input @bind="_newEmployee.Surname"/>
+            </td>
+            <td>
+                <select @bind="_newEmployee.Role.RoleId">
+                    <option>--Select Role--</option>
+                    @foreach (var item in _roles)
+                    {
+                        <option value="@item.RoleId">@item.RoleName</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <MudCheckBox @bind-Checked="@_newEmployee.IsActive"></MudCheckBox>
+            </td>
+            <td>
+                <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+
         </tbody>
     </table>
+  
+        
+       
+    
 }
-<div hidden="@_isEditHidden">
-    <p>Test</p>
-</div>
 
 @code {
-    private bool _isEditHidden = true;
+
+    bool _noUpdate = true;
+    bool _success;
+    private EmployeeDto _newEmployee = new EmployeeDto();
     private List<EmployeeDto> _employees;
-    private EmployeeDto _selectedEmployee = new EmployeeDto();
+    private EmployeeDto SelectedEmployee { get; set; } = new EmployeeDto();
+    private List<Role> _roles = new List<Role>();
 
     protected override async Task OnInitializedAsync()
     {
+        SelectedEmployee.Role = new Role();
+        _newEmployee.Role = new Role();
         _employees = await _employeeController.GetEmployeeRoles();
+        _roles = await _employeeController.GetRoles();
     }
 
-    void Edit(EmployeeDto employee)
+    async Task Edit(EmployeeDto employee)
     {
-        _selectedEmployee = employee;
-        _isEditHidden = false;
+        SelectedEmployee = employee;
+        var success = await _employeeController.UpdateEmployee(SelectedEmployee);
+        await FinishUpdate((success));
+    }
+
+    private async Task Add()
+    {
+        var success = await _employeeController.InsertEmployee(_newEmployee);
+        await FinishUpdate((success));
+    }
+
+    private async Task FinishUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _employees = await _employeeController.GetEmployeeRoles();
     }
 
 }

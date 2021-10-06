@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CMPG223.Services;
+using MudBlazor.Services;
 
 namespace CMPG223
 {
@@ -26,6 +27,7 @@ namespace CMPG223
             services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<IDatabaseService, DatabaseService>();
             services.AddTransient<IEmployeeController, EmployeeController>();
+            services.AddMudServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

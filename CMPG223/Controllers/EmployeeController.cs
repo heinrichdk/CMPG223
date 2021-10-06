@@ -11,6 +11,9 @@ namespace CMPG223.Controllers
     {
         Task<List<EmployeeDto>> GetEmployeeRoles();
         Task<List<UserLoginDto>> GetUserLoginDtos();
+        Task<List<Role>> GetRoles();
+        Task<bool> UpdateEmployee(EmployeeDto employeeDto);
+        Task<bool> InsertEmployee(EmployeeDto employeeDto);
     }
 
 
@@ -28,8 +31,8 @@ namespace CMPG223.Controllers
             var employees = await GetEmployees();
             return await ConvertEmployeeListIntoDto(employees);
         }
-        
-        
+
+
         public async Task<List<UserLoginDto>> GetUserLoginDtos()
         {
             var employees = await GetEmployeesWhereActive();
@@ -56,9 +59,37 @@ namespace CMPG223.Controllers
             return await ConvertEmployeeListIntoDto(employees);
         }
 
-        private async Task<List<Role>> GetRoles()
+        public async Task<List<Role>> GetRoles()
         {
             return await _databaseService.GetRoles();
+        }
+
+        public async Task<bool> UpdateEmployee(EmployeeDto employeeDto)
+        {
+            Employee employee = new Employee
+            {
+                EmployeeId = employeeDto.EmployeeId,
+                IsActive = employeeDto.IsActive,
+                RoleFk = employeeDto.Role.RoleId
+            };
+            return await _databaseService.UpdateEmployee(employee) != 0;
+        }
+
+        public async Task<bool> InsertEmployee(EmployeeDto employeeDto)
+        {
+            if (CheckEmployeeDto(employeeDto))
+            {
+                Employee employee = new Employee
+                {
+                    Name = employeeDto.Name,
+                    Surname = employeeDto.Surname,
+                    IsActive = employeeDto.IsActive,
+                    RoleFk = employeeDto.Role.RoleId
+                };
+                return await _databaseService.InsertEmployee(employee) != 0;
+            }
+
+            return false;
         }
 
         private async Task<List<Employee>> GetEmployees()
@@ -79,6 +110,12 @@ namespace CMPG223.Controllers
                     Role = roles.FirstOrDefault(x => x.RoleId == emp.RoleFk)
                 })
                 .ToList();
+        }
+
+        private bool CheckEmployeeDto(EmployeeDto employeeDto)
+        {
+            return !string.IsNullOrEmpty(employeeDto.Name) && !string.IsNullOrEmpty(employeeDto.Surname) &&
+                   employeeDto.Role.RoleId != null;
         }
     }
 }
