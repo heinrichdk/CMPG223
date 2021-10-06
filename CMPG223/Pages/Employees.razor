@@ -131,6 +131,11 @@ else
     {
         var success = await _employeeController.InsertEmployee(_newEmployee);
         await FinishUpdate((success));
+        if (success)
+        {
+            _newEmployee = new EmployeeDto();
+            _newEmployee.Role = new Role();
+        }
     }
 
     private async Task FinishUpdate(bool success)
@@ -142,7 +147,7 @@ else
             _employees = await _employeeController.GetEmployeeRoles();
     }
 
-    private async Task FilterEmployees(string text)
+    private async void FilterEmployees(string text)
     {
         text = text.ToLower();
         _employees = await _employeeController.GetEmployeeRoles();

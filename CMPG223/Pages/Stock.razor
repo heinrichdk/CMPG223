@@ -1,0 +1,165 @@
+﻿@page "/stock"
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@using CMPG223.Models
+@inject IStockController _stockController
+<h2>Suppliers</h2>
+
+@if (_suppliers == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="SearchText"/>
+    </div>
+
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
+        }
+    }
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Description</th>
+            <th>Supplier</th>
+            <th>Current Quantity</th>
+            <th>Max Quantity</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var st in _stock)
+        {
+            <tr>
+                <td>
+                    @st.Description
+                </td>
+                <td>
+                    <select @bind="st.SupplierDto.SupplierId">
+                        <option>@st.SupplierDto.Name</option>
+                        @foreach (var item in _suppliers)
+                        {
+                            <option value="@item.SupplierId">@item.Name</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <label>@st.CurrentQty</label>
+                </td>
+                <td>
+                    <input @bind="st.MaxQty"/>
+                </td>
+
+                <td>
+                    <MudButton @onclick="@(() => Edit(st))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+                </td>
+            </tr>
+        }
+        <h3>Add new supplier</h3>
+        <tr>
+            <td>
+                <input @bind="_newStock.Description"/>
+            </td>
+            <td>
+                <select @bind="_newStock.SupplierDto.SupplierId">
+                    <option>---Select Supplier---</option>
+                    @foreach (var item in _suppliers)
+                    {
+                        <option value="@item.SupplierId">@item.Name</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <input @bind="_newStock.CurrentQty"/>
+            </td>
+            <td>
+                <input @bind="_newStock.MaxQty"/>
+            </td>
+            <td>
+                <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+}
+
+@code {
+
+
+    private string _searchText;
+
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            FilterStock(value);
+            _searchText = value;
+        }
+    }
+
+    bool _noUpdate = true;
+    bool _success;
+    private StockDto _newStock = new StockDto();
+    private StockDto SelectedStock { get; set; } = new StockDto();
+    private List<SupplierDto> _suppliers = new List<SupplierDto>();
+    private List<StockDto> _stock = new List<StockDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _newStock.SupplierDto = new SupplierDto();
+        _suppliers = await _stockController.GetActiveSuppliers();
+        _stock = await _stockController.GetAllStock();
+    }
+
+    async Task Edit(StockDto stock)
+    {
+        SelectedStock = stock;
+        var success = await _stockController.UpdateStock(SelectedStock);
+        await FinishUpdate((success));
+    }
+
+    private async Task Add()
+    {
+        var success = await _stockController.InsertStock(_newStock);
+        await FinishUpdate((success));
+        if (success)
+        {
+            _newStock = new StockDto();
+            _newStock.SupplierDto = new SupplierDto();
+        }
+    }
+
+    private async Task FinishUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _stock = await _stockController.GetAllStock();
+    }
+
+    private async void FilterStock(string text)
+    {
+        text = text.ToLower();
+        _stock = await _stockController.GetAllStock();
+        if (text.Length > 2)
+        {
+            _stock = _stock.FindAll(x => x.Description.ToLower().Contains(text) || x.SupplierDto.Name.ToLower().Contains(text));
+        }
+    }
+
+}

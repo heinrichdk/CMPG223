@@ -1,6 +1,145 @@
 ﻿@page "/suppliers"
-<h3>Suppliers</h3>
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@inject IStockController _stockController
+<h2>Suppliers</h2>
+
+@if (_suppliers == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="SearchText"/>
+    </div>
+
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
+        }
+    }
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Contact Number</th>
+            <th>Is Active</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var sup in _suppliers)
+        {
+            <tr>
+                <td>
+                    <input @bind="sup.Name"/>
+                </td>
+                <td>
+                    <input @bind="sup.Email"/>
+                </td>
+                <td>
+                    <input @bind="sup.ContactNumber"/>
+                </td>
+                <td>
+                    <MudCheckBox @bind-Checked="@sup.IsActive"></MudCheckBox>
+                </td>
+                <td>
+                    <MudButton @onclick="@(() => Edit(sup))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+                </td>
+            </tr>
+        }
+        <h3>Add new supplier</h3>
+        <tr>
+            <td>
+                <input @bind="_newSupplier.Name"/>
+            </td>
+            <td>
+                <input @bind="_newSupplier.Email"/>
+            </td>
+            <td>
+                <input @bind="_newSupplier.ContactNumber"/>
+            </td>
+            <td>
+                <MudCheckBox @bind-Checked="@_newSupplier.IsActive"></MudCheckBox>
+            </td>
+            <td>
+                <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+}
 
 @code {
-    
+
+
+    private string _searchText;
+
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            FilterSuppliers(value);
+            _searchText = value;
+        }
+    }
+
+    bool _noUpdate = true;
+    bool _success;
+    private SupplierDto _newSupplier = new SupplierDto();
+    private List<SupplierDto> _suppliers;
+    private SupplierDto SelectedSupplier { get; set; } = new SupplierDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _suppliers = await _stockController.GetAllSuppliers();
+    }
+
+    async Task Edit(SupplierDto supplier)
+    {
+        SelectedSupplier = supplier;
+        var success = await _stockController.UpdateSupplier(SelectedSupplier);
+        await FinishUpdate((success));
+    }
+
+    private async Task Add()
+    {
+        var success = await _stockController.InsertSupplier(_newSupplier);
+        await FinishUpdate((success));
+        if (success)
+            _newSupplier = new SupplierDto();
+    }
+
+    private async Task FinishUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _suppliers = await _stockController.GetAllSuppliers();
+    }
+
+    private async void FilterSuppliers(string text)
+    {
+        text = text.ToLower();
+        _suppliers = await _stockController.GetAllSuppliers();
+        if (text.Length > 2)
+        {
+            _suppliers = _suppliers.FindAll(x => x.Name.ToLower().Contains(text) || x.Email.ToLower().Contains(text) || x.ContactNumber.ToLower().Contains(text));
+        }
+    }
+
 }

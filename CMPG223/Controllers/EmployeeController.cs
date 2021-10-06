@@ -114,8 +114,7 @@ namespace CMPG223.Controllers
 
         private bool CheckEmployeeDto(EmployeeDto employeeDto)
         {
-            return !string.IsNullOrEmpty(employeeDto.Name) && !string.IsNullOrEmpty(employeeDto.Surname) &&
-                   employeeDto.Role.RoleId != null;
+            return !string.IsNullOrEmpty(employeeDto.Name) && !string.IsNullOrEmpty(employeeDto.Surname);
         }
     }
 }
