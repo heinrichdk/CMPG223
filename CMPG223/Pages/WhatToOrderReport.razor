@@ -1,6 +1,14 @@
 ﻿@page "/whattoorderreport"
-<h3>WhatToOrderReport</h3>
-
+<h3>What To Order Report</h3>
+<div style="margin: 200px" id="pint_div">
+    <div style="float:right;">
+        <label>Date: </label>
+        <label>@Date</label>
+    </div>
+    <h4>Order Report</h4>
+</div>
+<input type="button" onclick="printdiv('pint_div')"  >
 @code {
-    
+    string Date = DateTime.Now.ToString("d");
+
 }

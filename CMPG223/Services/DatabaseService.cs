@@ -25,6 +25,7 @@ namespace CMPG223.Services
         Task<List<Supplier>> GetActiveSuppliers();
         Task<List<Stock>> GetAllStock();
         Task<int> InsertStock(Stock newStock);
+        Task<int> UpdateStock(Stock selectedStock);
     }
 
     public class DatabaseService : IDatabaseService
@@ -113,6 +114,12 @@ namespace CMPG223.Services
             await using var connection = new SqlConnection(_databaseConnectionString);
             return await connection.ExecuteAsync($"INSERT INTO Stock (Discription, SupplierFk, MaxQty, CurrentQty)" +
                                                  $" VALUES('{newStock.Discription}','{newStock.SupplierFk}','{newStock.MaxQty}','{newStock.CurrentQty}')");
+        }
+
+        public async Task<int> UpdateStock(Stock selectedStock)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync($"UPDATE Stock SET Discription = '{selectedStock.Discription}', SupplierFk = '{selectedStock.SupplierFk}', MaxQty = '{selectedStock.MaxQty}', CurrentQty ='{selectedStock.CurrentQty}'");
         }
     }
 }

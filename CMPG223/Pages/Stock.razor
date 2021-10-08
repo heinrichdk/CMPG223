@@ -48,7 +48,7 @@ else
                 </td>
                 <td>
                     <select @bind="st.SupplierDto.SupplierId">
-                        <option>@st.SupplierDto.Name</option>
+                        <option>--Select Role--</option>
                         @foreach (var item in _suppliers)
                         {
                             <option value="@item.SupplierId">@item.Name</option>
@@ -113,10 +113,10 @@ else
 
     bool _noUpdate = true;
     bool _success;
-    private StockDto _newStock = new StockDto();
-    private StockDto SelectedStock { get; set; } = new StockDto();
-    private List<SupplierDto> _suppliers = new List<SupplierDto>();
-    private List<StockDto> _stock = new List<StockDto>();
+    private StockDto _newStock = new();
+    private StockDto SelectedStock { get; set; }
+    private List<SupplierDto> _suppliers;
+    private List<StockDto> _stock;
 
     protected override async Task OnInitializedAsync()
     {
