@@ -1,6 +1,38 @@
 ﻿@page "/orders"
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@using CMPG223.Models
+@inject ISOrderController _orderController
+
+
 <h3>Orders</h3>
 
+
+<table class="table">
+    <tr>
+        <th>Requested By</th>
+        <th>Order Number</th>
+        <th>Date Requested</th>
+        <th>Date Received</th>
+        <th>Customer Address</th>
+        <th>Supplier Name</th>
+    </tr>
+
+</table>
+
 @code {
+
+    private string _searchText;
+
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+           
+            _searchText = value;
+        }
+    }
+
     
 }
