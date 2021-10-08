@@ -99,17 +99,29 @@ namespace CMPG223.Controllers
 
         private async Task<List<EmployeeDto>> ConvertEmployeeListIntoDto(List<Employee> employees)
         {
+            var lst = new List<EmployeeDto>();
             var roles = await GetRoles();
 
-            return employees.Select(emp => new EmployeeDto
+            foreach (var emp in employees)
+            {
+                var role = roles.First(x => x.RoleId == emp.RoleFk);
+                EmployeeDto eDto = new EmployeeDto
                 {
                     EmployeeId = emp.EmployeeId,
                     Name = emp.Name,
                     Surname = emp.Surname,
                     IsActive = emp.IsActive,
-                    Role = roles.FirstOrDefault(x => x.RoleId == emp.RoleFk)
-                })
-                .ToList();
+                    Role = new Role()
+                    {
+                        RoleId = role.RoleId,
+                        RoleName = role.RoleName,
+                        Description = role.Description
+                    }
+                };
+                lst.Add(eDto);
+            }
+
+            return lst;
         }
 
         private bool CheckEmployeeDto(EmployeeDto employeeDto)

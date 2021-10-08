@@ -75,9 +75,16 @@ namespace CMPG223.Controllers
             return ConvertSuppliersListToDto(suppliers);
         }
 
-        public Task<bool> UpdateStock(StockDto selectedStock)
+        public async Task<bool> UpdateStock(StockDto selectedStock)
         {
-            throw new System.NotImplementedException();
+            Stock st = new Stock
+            {
+                StockId = selectedStock.StockId,
+                MaxQty = selectedStock.MaxQty,
+                SupplierFk = selectedStock.SupplierDto.SupplierId,
+                CurrentQty = selectedStock.CurrentQty
+            };
+            return await _databaseService.UpdateStock(st) != 0;
         }
 
         public async Task<bool> InsertStock(StockDto newStock)
@@ -113,15 +120,29 @@ namespace CMPG223.Controllers
         {
             var suppliers = await GetAllSuppliers();
 
-            return stock.Select(emp => new StockDto
+            var lst = new List<StockDto>();
+            foreach (var st in stock)
+            {
+               
+                var sup = suppliers.First(x => x.SupplierId == st.SupplierFk);
+                StockDto sDto = new StockDto
                 {
-                    StockId = emp.StockId,
-                    Description = emp.Discription,
-                    MaxQty = emp.MaxQty,
-                    CurrentQty = emp.CurrentQty,
-                    SupplierDto = suppliers.FirstOrDefault(x => x.SupplierId == emp.SupplierFk)
-                })
-                .ToList();
+                    StockId = st.StockId,
+                    Description = st.Discription,
+                    CurrentQty = st.CurrentQty,
+                    MaxQty = st.MaxQty,
+                    SupplierDto = new SupplierDto()
+                    {
+                        SupplierId = sup.SupplierId,
+                        Name = sup.Name,
+                        IsActive = sup.IsActive,
+                        Email = sup.Email,
+                        ContactNumber = sup.ContactNumber
+                    }
+                };
+                lst.Add(sDto);
+            }
+            return lst;
         }
 
         private async Task<List<Stock>> GetStock()

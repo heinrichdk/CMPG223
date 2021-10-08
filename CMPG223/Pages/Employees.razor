@@ -4,6 +4,8 @@
 @using CMPG223.Dtos
 @using CMPG223.Controllers
 @inject IEmployeeController _employeeController
+
+
 <h2>Employees</h2>
 
 @if (_employees == null)
@@ -15,8 +17,8 @@
 else
 {
     <div style="float:right;">
-    <label>Search</label>
-    <input @bind="SearchText"/>
+        <label>Search</label>
+        <input @bind="SearchText"/>
     </div>
 
     @if (!_noUpdate)
@@ -96,6 +98,7 @@ else
 
 
     private string _searchText;
+
     private string SearchText
     {
         get => _searchText;
@@ -105,6 +108,7 @@ else
             _searchText = value;
         }
     }
+
     bool _noUpdate = true;
     bool _success;
     private EmployeeDto _newEmployee = new EmployeeDto();
