@@ -5,23 +5,24 @@ using CMPG223.Dtos;
 using CMPG223.Models;
 using CMPG223.Services;
 
-namespace CMPG223.Controllers 
+namespace CMPG223.Controllers
 {
-    public interface ISOrderController 
+    public interface ISOrderController
     {
         Task<bool> UpdateOrder(OrderDto orderDto);
         Task<bool> InsertOrder(OrderDto orderDto);
-        
 
-    public class OrderController 
-    {
-        public Task<bool> UpdateOrder(OrderDto selectedOrder)
+
+        public class OrderController
         {
-            throw new System.NotImplementedException();
+            public Task<bool> UpdateOrder(OrderDto selectedOrder)
+            {
+                throw new System.NotImplementedException();
+            }
+
+
+
+
         }
-       
-
-       
-
     }
 }
