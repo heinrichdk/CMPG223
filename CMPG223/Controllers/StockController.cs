@@ -17,6 +17,10 @@ namespace CMPG223.Controllers
         Task<bool> UpdateStock(StockDto selectedStock);
         Task<bool> InsertStock(StockDto newStock);
         Task<List<StockDto>> GetAllStock();
+        Task<List<ProjectDto>> GetProjects();
+        Task<List<ProjectTypeDto>> GetProjectTypes();
+        Task<bool> UpdateProject(ProjectDto selectedProject);
+        Task<bool> InsertProject(ProjectDto newProject);
     }
     
     public class StockController:IStockController
@@ -114,6 +118,26 @@ namespace CMPG223.Controllers
         {
             var stock = await GetStock();
             return await ConvertStockListIntoDto(stock);
+        }
+
+        public Task<List<ProjectDto>> GetProjects()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<List<ProjectTypeDto>> GetProjectTypes()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<bool> UpdateProject(ProjectDto selectedProject)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Task<bool> InsertProject(ProjectDto newProject)
+        {
+            throw new System.NotImplementedException();
         }
 
         private async Task<List<StockDto>> ConvertStockListIntoDto(List<Stock> stock)
