@@ -20,9 +20,9 @@ namespace CMPG223.Services
         Task<int> InsertEmployee(Employee employee);
         Task<List<Supplier>> GetSuppliers();
         Task<int> InsertSupplier(Supplier supplier);
-
         Task<int> UpdateSupplier(Supplier supplier);
         Task<List<Supplier>> GetActiveSuppliers();
+        Task<List<Stock>> GetActiveStock();
         Task<List<Stock>> GetAllStock();
         Task<int> InsertStock(Stock newStock);
         Task<int> UpdateStock(Stock selectedStock);
@@ -31,7 +31,7 @@ namespace CMPG223.Services
     public class DatabaseService : IDatabaseService
     {
         private readonly string _databaseConnectionString =
-            $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+            $"Data Source=TINUSLAPTOP;Initial Catalog=CMPG223;Integrated Security=True";
 
         public async Task<List<Employee>> GetEmployees()
         {
@@ -100,6 +100,13 @@ namespace CMPG223.Services
             await using var connection = new SqlConnection(_databaseConnectionString);
             var suppliers = connection.Query<Supplier>("SELECT * FROM Suppliers WHERE IsActive = '1'").ToList();
             return suppliers.Count == 0 ? new List<Supplier>() : suppliers;
+        }
+
+        public async Task<List<Stock>> GetActiveStock()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var stock = connection.Query<Stock>("SELECT * FROM Stock WHERE IsActive = '1'").ToList();
+            return stock.Count == 0 ? new List<Stock>() : stock;
         }
 
         public async Task<List<Stock>> GetAllStock()

@@ -1,14 +1,70 @@
-﻿@page "/whattoorderreport"
+﻿@page "/whatToOrderReport"
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@inject IStockController _stockController
+
 <h3>What To Order Report</h3>
 <div style="margin: 200px" id="pint_div">
     <div style="float:right;">
         <label>Date: </label>
-        <label>@Date</label>
+        <label>@Date </label>
     </div>
     <h4>Order Report</h4>
 </div>
-<input type="button" onclick="printdiv('pint_div')"  >
+
+<div>
+    @foreach (var supplier in _suppliers)
+    {
+        <h4>@supplier.Name ContactNumber:@supplier.ContactNumber Email:@supplier.Email </h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quatity to Order</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var stock in _acctiveStockToOrder.FindAll(x => x.SupplierDto.SupplierId == @supplier.SupplierId))
+                {
+                    <tr>
+                        <td>
+                            @stock.Description
+                        </td>
+                        <td>
+                            <select @bind="stock.SupplierDto.SupplierId">
+                                <option>--Select Role--</option>
+                                @foreach (var item in _suppliers)
+                                {
+                                    <option value="@item.SupplierId">@item.Name</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <label>@stock.CurrentQty</label>
+                        </td>
+                        <td>
+                            <input @bind="stock.MaxQty" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>}
+
+</div>
+<input type="button" onclick="printdiv('pint_div')">
+<input type="button" onclick="printdiv('pint_div')">
+
 @code {
+
+    private List<SupplierDto> _suppliers = new List<SupplierDto>();
+    private List<StockDto> _acctiveStockToOrder = new List<StockDto>();
+
     string Date = DateTime.Now.ToString("d");
 
+    protected override async Task OnInitializedAsync()
+    {
+        _suppliers = await _stockController.GetActiveSuppliers();
+        _acctiveStockToOrder = await _stockController.GetActiveStock();
+
+    }
 }
