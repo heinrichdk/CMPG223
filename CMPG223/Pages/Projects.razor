@@ -44,7 +44,7 @@ else
         {
             <tr>
                 <td>@project.ProjectNumber</td>
-                <td>@project.ProjectType.</td>
+                <td>@project.ProjectType.Name</td>
                 <td>
                     <MudCheckBox @bind-Checked="@project.IsActive"></MudCheckBox>
                 </td>
@@ -76,33 +76,50 @@ else
         </tr>
         </tbody>
     </table>
+}
+<h2>Project Types</h2>
+@if (_projectTypes == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="TypeSearchText"/>
+    </div>
 
-    <h2>Project Types</h2>
-    @if (_projectTypes == null)
-    {
-        <p>
-            <em>Loading...</em>
-        </p>
-    }
-    else
-    {
-        <div style="float:right;">
-            <label>Search</label>
-            <input @bind="TypeSearchText"/>
-        </div>
-
-        @if (!_noUpdate)
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Project Type Name</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var type in _projectTypes)
         {
-            @if (_success)
-            {
-                <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
-            }
-            else
-            {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
-            }
+            <tr>
+                <td>@type.Name</td>
+                <td>@type.Description.</td>
+            </tr>
         }
-    }
+        <h3>Add new project type</h3>
+        <tr>
+            <td>
+                <input @bind="_newType.Name"/>
+            </td>
+            <td>
+                <input @bind="_newType.Description"/>
+            </td>
+            <td>
+                <MudButton @onclick="@(AddType)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 }
 
 @code {
@@ -125,15 +142,11 @@ else
         get => _typeSearchText;
         set
         {
-            FilterType(value);
+            FilterProjectTypes(value);
             _typeSearchText = value;
         }
     }
 
-    private void FilterType(string value)
-    {
-        throw new NotImplementedException();
-    }
 
     bool _noUpdate = true;
     bool _success;
@@ -141,6 +154,7 @@ else
     private List<ProjectDto> _projects;
     private ProjectDto SelectedProject { get; set; } = new ProjectDto();
     private List<ProjectTypeDto> _projectTypes = new List<ProjectTypeDto>();
+    private ProjectTypeDto _newType = new ProjectTypeDto();
 
     protected override async Task OnInitializedAsync()
     {
@@ -184,6 +198,37 @@ else
         if (text.Length > 2)
         {
             _projects = _projects.FindAll(x => x.ProjectNumber.ToLower().Contains(text) || x.ProjectType.Name.ToLower().Contains(text) || x.ProjectType.Description.ToLower().Contains(text));
+        }
+    }
+
+
+    private async Task AddType()
+    {
+        var success = await _stockController.InsertProjectType(_newType);
+        await FinishTypeUpdate((success));
+        if (success)
+        {
+            _newProject = new ProjectDto();
+            _newProject.ProjectType = new ProjectTypeDto();
+        }
+    }
+
+    private async Task FinishTypeUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _projectTypes = await _stockController.GetProjectTypes();
+    }
+
+    private async void FilterProjectTypes(string text)
+    {
+        text = text.ToLower();
+        _projectTypes = await _stockController.GetProjectTypes();
+        if (text.Length > 2)
+        {
+            _projectTypes = _projectTypes.FindAll(x => x.Name.ToLower().Contains(text) || x.Description.ToLower().Contains(text));
         }
     }
 
