@@ -86,7 +86,8 @@ namespace CMPG223.Controllers
                 StockId = selectedStock.StockId,
                 MaxQty = selectedStock.MaxQty,
                 SupplierFk = selectedStock.SupplierDto.SupplierId,
-                CurrentQty = selectedStock.CurrentQty
+                CurrentQty = selectedStock.CurrentQty,
+                IsActive = selectedStock.IsActive
             };
             return await _databaseService.UpdateStock(st) != 0;
         }
@@ -100,7 +101,8 @@ namespace CMPG223.Controllers
                     Discription = newStock.Description,
                     CurrentQty = newStock.CurrentQty,
                     MaxQty = newStock.MaxQty,
-                    SupplierFk = newStock.SupplierDto.SupplierId
+                    SupplierFk = newStock.SupplierDto.SupplierId,
+                    IsActive = newStock.IsActive
                 };
                 return await _databaseService.InsertStock(stock) != 0;
             }
@@ -155,6 +157,7 @@ namespace CMPG223.Controllers
                     Description = st.Discription,
                     CurrentQty = st.CurrentQty,
                     MaxQty = st.MaxQty,
+                    IsActive = st.IsActive,
                     SupplierDto = new SupplierDto()
                     {
                         SupplierId = sup.SupplierId,

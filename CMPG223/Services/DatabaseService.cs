@@ -112,14 +112,14 @@ namespace CMPG223.Services
         public async Task<int> InsertStock(Stock newStock)
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
-            return await connection.ExecuteAsync($"INSERT INTO Stock (Discription, SupplierFk, MaxQty, CurrentQty)" +
-                                                 $" VALUES('{newStock.Discription}','{newStock.SupplierFk}','{newStock.MaxQty}','{newStock.CurrentQty}')");
+            return await connection.ExecuteAsync($"INSERT INTO Stock (Discription, SupplierFk, MaxQty, CurrentQty, IsActive)" +
+                                                 $" VALUES('{newStock.Discription}','{newStock.SupplierFk}','{newStock.MaxQty}','{newStock.CurrentQty}', '{newStock.IsActive}')");
         }
 
         public async Task<int> UpdateStock(Stock selectedStock)
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
-            return await connection.ExecuteAsync($"UPDATE Stock SET Discription = '{selectedStock.Discription}', SupplierFk = '{selectedStock.SupplierFk}', MaxQty = '{selectedStock.MaxQty}', CurrentQty ='{selectedStock.CurrentQty}'");
+            return await connection.ExecuteAsync($"UPDATE Stock SET  SupplierFk = '{selectedStock.SupplierFk}', MaxQty = '{selectedStock.MaxQty}', CurrentQty ='{selectedStock.CurrentQty}', IsActive = '{selectedStock.IsActive}' WHERE StockId = '{selectedStock.StockId}'");
         }
     }
 }

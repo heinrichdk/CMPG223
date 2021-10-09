@@ -37,6 +37,7 @@ else
             <th>Supplier</th>
             <th>Current Quantity</th>
             <th>Max Quantity</th>
+            <th>Is Active</th>
         </tr>
         </thead>
         <tbody>
@@ -61,7 +62,9 @@ else
                 <td>
                     <input @bind="st.MaxQty"/>
                 </td>
-
+                <td>
+                    <MudCheckBox @bind-Checked="@st.IsActive"></MudCheckBox>
+                </td>
                 <td>
                     <MudButton @onclick="@(() => Edit(st))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
                 </td>
@@ -88,6 +91,9 @@ else
             </td>
             <td>
                 <input @bind="_newStock.MaxQty"/>
+            </td>
+            <td>
+                <MudCheckBox @bind-Checked="@_newStock.IsActive"></MudCheckBox>
             </td>
             <td>
                 <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
