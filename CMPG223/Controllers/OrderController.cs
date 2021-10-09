@@ -21,8 +21,8 @@ namespace CMPG223.Controllers
 
     public class OrderController:ISOrderController 
     {
-        private readonly DatabaseService _databaseService;
-        public OrderController(DatabaseService databaseService) 
+        private readonly IDatabaseService _databaseService;
+        public OrderController(IDatabaseService databaseService) 
         {
             _databaseService = databaseService;
         }
