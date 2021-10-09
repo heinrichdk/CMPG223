@@ -29,6 +29,7 @@ namespace CMPG223
             services.AddTransient<IEmployeeController, EmployeeController>();
             services.AddMudServices();
             services.AddTransient<IStockController, StockController>();
+            services.AddTransient<ISOrderController, OrderController>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

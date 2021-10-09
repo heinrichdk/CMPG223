@@ -2,7 +2,7 @@
 @using CMPG223.Controllers
 @using CMPG223.Dtos
 @using CMPG223.Models
-@inject OrderController _orderComntroller
+@inject OrderController _orderController
 
 
 
@@ -120,13 +120,13 @@ else
     protected override async Task OnInitializedAsync()
     {
 
-        _orders = await _orderComntroller.GetAllOrders();
+        _orders = await _orderController.GetAllOrders();
 
     }
     async Task Edit(OrderDto order)
     {
         SelectedOrder = order;
-        var success = await _orderComntroller.UpdateOrder(SelectedOrder);
+        var success = await _orderController.UpdateOrder(SelectedOrder);
         await FinishUpdate((success));
     }
     private async Task FinishUpdate(bool success)
@@ -135,7 +135,7 @@ else
         _success = success;
 
         if (success)
-            _orders = await _orderComntroller.GetAllOrders();
+            _orders = await _orderController.GetAllOrders();
     }
 
 
