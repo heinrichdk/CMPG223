@@ -9,6 +9,7 @@ namespace CMPG223.Models
         public  int MaxQty { get; set; }
         public  int CurrentQty { get; set; }
         public  string Discription { get; set; }
+        public  bool IsActive { get; set; }
         public  Guid SupplierFk { get; set; }
     }
 }

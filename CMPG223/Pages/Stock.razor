@@ -3,7 +3,7 @@
 @using CMPG223.Dtos
 @using CMPG223.Models
 @inject IStockController _stockController
-<h2>Suppliers</h2>
+<h2>Stock</h2>
 
 @if (_suppliers == null)
 {
@@ -37,6 +37,7 @@ else
             <th>Supplier</th>
             <th>Current Quantity</th>
             <th>Max Quantity</th>
+            <th>Is Active</th>
         </tr>
         </thead>
         <tbody>
@@ -61,14 +62,16 @@ else
                 <td>
                     <input @bind="st.MaxQty"/>
                 </td>
-
+                <td>
+                    <MudCheckBox @bind-Checked="@st.IsActive"></MudCheckBox>
+                </td>
                 <td>
                     <MudButton @onclick="@(() => Edit(st))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
                 </td>
             </tr>
         }
 
-        <h3>Add new supplier</h3>
+        <h3>Add new stock item</h3>
 
 
         <tr>
@@ -89,6 +92,9 @@ else
             </td>
             <td>
                 <input @bind="_newStock.MaxQty"/>
+            </td>
+            <td>
+                <MudCheckBox @bind-Checked="@_newStock.IsActive"></MudCheckBox>
             </td>
             <td>
                 <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>

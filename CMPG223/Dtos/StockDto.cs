@@ -8,6 +8,8 @@ namespace CMPG223.Dtos
         public  int MaxQty { get; set; }
         public  int CurrentQty { get; set; }
         public  string Description { get; set; }
+        
+        public  bool IsActive { get; set; }
         public  SupplierDto SupplierDto { get; set; }
     }
 }

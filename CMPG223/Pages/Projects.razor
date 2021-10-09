@@ -1,6 +1,235 @@
 ﻿@page "/projects"
-<h3>Projects</h3>
+@using CMPG223.Models
+@using CMPG223.Services
+@using CMPG223.Dtos
+@using CMPG223.Controllers
+@inject IStockController _stockController
+
+<h2>Projects</h2>
+
+@if (_projects == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="ProjectsSearchText"/>
+    </div>
+
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
+        }
+    }
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Project Number</th>
+            <th>Project Type</th>
+            <th>Is Active</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var project in _projects)
+        {
+            <tr>
+                <td>@project.ProjectNumber</td>
+                <td>@project.ProjectType.Name</td>
+                <td>
+                    <MudCheckBox @bind-Checked="@project.IsActive"></MudCheckBox>
+                </td>
+                <td>
+                    <MudButton @onclick="@(() => EditProject(project))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+                </td>
+            </tr>
+        }
+        <h3>Add new project</h3>
+        <tr>
+            <td>
+                <input @bind="_newProject.ProjectNumber"/>
+            </td>
+            <td>
+                <select @bind="_newProject.ProjectType.ProjectTypeId">
+                    <option>--Select Project Type--</option>
+                    @foreach (var item in _projectTypes)
+                    {
+                        <option value="@item.ProjectTypeId">@item.Name</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <MudCheckBox @bind-Checked="@_newProject.IsActive"></MudCheckBox>
+            </td>
+            <td>
+                <MudButton @onclick="@(AddProject)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+}
+<h2>Project Types</h2>
+@if (_projectTypes == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="TypeSearchText"/>
+    </div>
+
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Project Type Name</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var type in _projectTypes)
+        {
+            <tr>
+                <td>@type.Name</td>
+                <td>@type.Description.</td>
+            </tr>
+        }
+        <h3>Add new project type</h3>
+        <tr>
+            <td>
+                <input @bind="_newType.Name"/>
+            </td>
+            <td>
+                <input @bind="_newType.Description"/>
+            </td>
+            <td>
+                <MudButton @onclick="@(AddType)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+}
 
 @code {
-    
+    private string _projectsSearchText;
+
+    private string ProjectsSearchText
+    {
+        get => _projectsSearchText;
+        set
+        {
+            FilterProjects(value);
+            _projectsSearchText = value;
+        }
+    }
+
+    private string _typeSearchText;
+
+    private string TypeSearchText
+    {
+        get => _typeSearchText;
+        set
+        {
+            FilterProjectTypes(value);
+            _typeSearchText = value;
+        }
+    }
+
+
+    bool _noUpdate = true;
+    bool _success;
+    private ProjectDto _newProject = new ProjectDto();
+    private List<ProjectDto> _projects;
+    private ProjectDto SelectedProject { get; set; } = new ProjectDto();
+    private List<ProjectTypeDto> _projectTypes = new List<ProjectTypeDto>();
+    private ProjectTypeDto _newType = new ProjectTypeDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        SelectedProject.ProjectType = new ProjectTypeDto();
+        _newProject.ProjectType = new ProjectTypeDto();
+        _projects = await _stockController.GetProjects();
+        _projectTypes = await _stockController.GetProjectTypes();
+    }
+
+    async Task EditProject(ProjectDto project)
+    {
+        SelectedProject = project;
+        var success = await _stockController.UpdateProject(SelectedProject);
+        await FinishProjectUpdate((success));
+    }
+
+    private async Task AddProject()
+    {
+        var success = await _stockController.InsertProject(_newProject);
+        await FinishProjectUpdate((success));
+        if (success)
+        {
+            _newProject = new ProjectDto();
+            _newProject.ProjectType = new ProjectTypeDto();
+        }
+    }
+
+    private async Task FinishProjectUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _projects = await _stockController.GetProjects();
+    }
+
+    private async void FilterProjects(string text)
+    {
+        text = text.ToLower();
+        _projects = await _stockController.GetProjects();
+        if (text.Length > 2)
+        {
+            _projects = _projects.FindAll(x => x.ProjectNumber.ToLower().Contains(text) || x.ProjectType.Name.ToLower().Contains(text) || x.ProjectType.Description.ToLower().Contains(text));
+        }
+    }
+
+
+    private async Task AddType()
+    {
+        var success = await _stockController.InsertProjectType(_newType);
+        await FinishTypeUpdate((success));
+        if (success)
+        {
+            _newProject = new ProjectDto();
+            _newProject.ProjectType = new ProjectTypeDto();
+        }
+    }
+
+    private async Task FinishTypeUpdate(bool success)
+    {
+        _noUpdate = false;
+        _success = success;
+
+        if (success)
+            _projectTypes = await _stockController.GetProjectTypes();
+    }
+
+    private async void FilterProjectTypes(string text)
+    {
+        text = text.ToLower();
+        _projectTypes = await _stockController.GetProjectTypes();
+        if (text.Length > 2)
+        {
+            _projectTypes = _projectTypes.FindAll(x => x.Name.ToLower().Contains(text) || x.Description.ToLower().Contains(text));
+        }
+    }
+
 }
