@@ -2,55 +2,116 @@
 @using CMPG223.Controllers
 @using CMPG223.Dtos
 @using CMPG223.Models
+@inject IStockController _stockController;
 
 <h3>ProjectReport</h3>
 
-<select @bind="SelectProjectNumber">
+@if (hasError)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@ErrorMessage</MudAlert>
+}
+
+<select @bind="SelectProjectId">
     <option>Select a Project Number-</option>
-    @foreach (var item in StockC)
+    @foreach (var item in projects)
     {
-        <option value="@item.Project.ProjectNumber"></option>
+        <option value="@item.ProjectId">@item.ProjectNumber</option>
     }
 </select>
-
-<br/>
+<br />
+    <MudButton @onclick="@(GenerateReport)" Variant="Variant.Filled" Color="Color.Primary">Generate Report</MudButton>
+<br />
+@if (StockC.Count > 0)
+{
+<h4>Project Report</h4>
 <table class="table">
     <thead>
         <tr>
-            <th>Store Manager</th>
-            <th>Artisan</th>
+            <th>Date</th>
             <th>Items Checked out</th>
+            <th>Quantity</th>
+            <th>Store Manager</th>
+            <th>Artisan</th>      
         </tr>
     </thead>
     <tbody>
-        <td>
-            
-        </td>
-        <td>
-            
-        </td>
+        @foreach(var item in StockC)
+         {
+        <tr>
+            <td>
+                <label>
+                    @item.Date.ToShortDateString()
+                </label>
+            </td>
+            <td>
+                <label>
+                    @item.StockDto.Description
+                </label>
+            </td>
+            <td>
+                <label>
+                    @item.Qty
+                </label>
+            </td>
+            <td>
+                <label>
+                    @item.StoreManager.Name @item.StoreManager.Surname
+                </label>
+            </td>
+            <td>
+                <label>
+                    @item.Artisan.Name @item.Artisan.Surname
+                </label>
+            </td>
+        </tr>
+         }
 
     </tbody>
 </table>
+}
 
 @code {
 
 
     private Guid _selectedProjectNumber;
 
-    private Guid SelectProjectNumber
+    private Guid SelectProjectId
     {
         get => _selectedProjectNumber;
         set
         {
             _selectedProjectNumber = value;
             if (value != Guid.Empty)
-                _selectedProject = StockC.First(x => x.StockCheckedOutId == value);
+                _selectedProject = projects.First(x => x.ProjectId == value);
         }
     }
 
-    private StockCheckedOutDto _selectedProject;
+    private ProjectDto _selectedProject;
     private List<StockCheckedOutDto> StockC = new List<StockCheckedOutDto>();
+    private List<ProjectDto> projects = new List<ProjectDto>();
+    private string ErrorMessage;
+    private bool hasError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        projects = await _stockController.GetProjects();
+    }
+
+    private async Task GenerateReport()
+    {
+        if (SelectProjectId == Guid.Empty)
+        {
+            DisplayError("Please Validate all inputs");
+            return;
+        }
+        StockC = await _stockController.GetCheckoutStockByProjectId(SelectProjectId);
+    }
+
+    private void DisplayError(string error)
+    {
+        hasError = true;
+        ErrorMessage = error;
+    }
 
 
 }
