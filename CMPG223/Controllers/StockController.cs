@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using CMPG223.Dtos;
@@ -25,6 +27,9 @@ namespace CMPG223.Controllers
         Task<bool> UpdateProject(ProjectDto selectedProject);
         Task<bool> InsertProject(ProjectDto newProject);
         Task<bool> InsertProjectType(ProjectTypeDto newType);
+        Task<List<ProjectDto>> GetActiveProjects();
+        Task<List<StockDto>> GetActiveStock();
+        Task<bool> CheckItemsOut(List<StockCheckedOutDto> stockCheckedOutDtos);
     }
 
     public class StockController : IStockController
@@ -231,6 +236,53 @@ namespace CMPG223.Controllers
         {
             return await _databaseService.InsertProjectType(CreateProjectTypeEntity(newType)) != 0;
         }
+
+        public async Task<List<ProjectDto>> GetActiveProjects()
+        {
+            var projects = await _databaseService.GetActiveProjects();
+            return await CreatProjectDtoList(projects);
+        }
+
+        public async Task<List<StockDto>> GetActiveStock()
+        {
+            return await ConvertStockListIntoDto(await _databaseService.GetActiveStock());
+        }
+
+        public async Task<bool> CheckItemsOut(List<StockCheckedOutDto> stockCheckedOutDtos)
+        {
+            foreach (var item  in stockCheckedOutDtos)
+            {
+
+                var remainingStock = item.StockDto.CurrentQty - item.Qty;
+                Stock st = new Stock
+                {
+                    StockId = item.StockDto.StockId,
+                    MaxQty = item.StockDto.MaxQty,
+                    SupplierFk = item.StockDto.SupplierDto.SupplierId,
+                    CurrentQty = remainingStock,
+                    IsActive = item.StockDto.IsActive
+                };
+                if (await _databaseService.UpdateStock(st) == 0)
+                    return false;
+
+                StockCheckedOut check = new StockCheckedOut()
+                {
+                    Date = DateTime.Now,
+                    Qty = item.Qty,
+                    ArtisanFk = item.Artisan.EmployeeId,
+                    StoreManagerFk = item.StoreManager.EmployeeId,
+                    ProjectFk = item.Project.ProjectId,
+                    StockFk = item.StockDto.StockId
+                };
+                if( await _databaseService.StockCheckedOut(check) == 0)
+                    return false;
+            }
+
+            return true;
+        }
+        
+        
+        
 
         private async Task<List<StockDto>> ConvertStockListIntoDto(List<Stock> stock)
         {

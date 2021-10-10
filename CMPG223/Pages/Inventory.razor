@@ -1,7 +1,239 @@
 ﻿@page "/"
+@using CMPG223.Dtos
+@using CMPG223.Models
+@using CMPG223.Controllers
+@inject IStockController _stockController;
+@inject IEmployeeController _employeeController;
 
-<h1>Hello, world!</h1>
+<h1>Check Out Stock</h1>
+@if (StoreManangers.Count == 0 || Artisans.Count == 0 || Projects.Count == 0)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@ErrorMessage</MudAlert>
+        }
+    }
+    <div style="margin-left: 50px; margin-right: 50px; margin-top: 50px">
 
-Welcome to your new app.
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Store Manager On Duty</th>
+                <th>Artisan</th>
+                <th>Project</th>
+            </tr>
+            </thead>
+            <tbody>
+            <td>
+                <select @bind="SelectedStoreManagerId">
+                    <option>--Select Store Manager--</option>
+                    @foreach (var item in StoreManangers)
+                    {
+                        <option value="@item.EmployeeId">@item.Name @item.Surname</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <select @bind="SelectedArtisanId">
+                    <option>--Select Artisan--</option>
+                    @foreach (var item in Artisans)
+                    {
+                        <option value="@item.EmployeeId">@item.Name @item.Surname</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <select @bind="SelectedProjectId">
+                    <option>--Select Project--</option>
+                    @foreach (var item in Projects)
+                    {
+                        <option value="@item.ProjectId">@item.ProjectNumber</option>
+                    }
+                </select>
+            </td>
+            </tbody>
+        </table>
+        @if (StockCheckedOutDtos.Count > 0)
+        {
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Stock Item</th>
+                    <th>Quantity Availible</th>
+                    <th>Quantity Checked Out</th>
+                    <th> Remove Item </th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in StockCheckedOutDtos)
+                {
+                    <tr>
+                        <td>
+                            <label>@item.StockDto.Description</label>
+                        </td>
+                        <td>
+                            <label>@item.StockDto.CurrentQty</label>
+                        </td>
+                        <td>
+                            <label>@item.Qty</label>
+                        </td>
+                        <td>
+                            <MudButton @onclick="@(() => Remove(item))" Variant="Variant.Filled" Color="Color.Primary">Remove</MudButton>
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <MudButton @onclick="@(Save)" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        }
+        <h4>New Item</h4>
+        <table class="table">
+            <tr>
+                <th>Stock Item</th>
+                <th>Quantity Availible</th>
+                <th>Quantity Checked Out</th>
+                <th> Remove Item </th>
+            </tr>
+            <tbody>
+            <tr>
+                <td>
+                    <select @bind="SelectedStockId">
+                        <option>--Select Stock--</option>
+                        @foreach (var item in StockDto)
+                        {
+                            <option value="@item.StockId">@item.Description</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <label>@_newStockCheckedOutDto.StockDto.CurrentQty</label>
+                </td>
+                <td>
+                    <input type="number" @bind="_newStockCheckedOutDto.Qty"/>
+                </td>
+                <td>
+                    <MudButton @onclick="@(Add)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code
+{
+    private Guid _selectedStockId;
+
+    private Guid SelectedStockId
+    {
+        get => _selectedStockId;
+        set
+        {
+            _selectedStockId = value;
+            if (value != _blankGuid)
+                _newStockCheckedOutDto.StockDto = StockDto.First(x => x.StockId == value);
+        }
+    }
+
+    private StockCheckedOutDto _newStockCheckedOutDto { get; set; } = new StockCheckedOutDto();
+    private Guid SelectedStoreManagerId { get; set; }
+    private Guid SelectedArtisanId { get; set; }
+    private Guid SelectedProjectId { get; set; }
+    private Guid _blankGuid { get; set; }
+    private List<EmployeeDto> StoreManangers = new List<EmployeeDto>();
+    private List<EmployeeDto> Artisans = new List<EmployeeDto>();
+    private List<ProjectDto> Projects = new List<ProjectDto>();
+    private List<StockDto> StockDto = new List<StockDto>();
+    private List<StockCheckedOutDto> StockCheckedOutDtos = new List<StockCheckedOutDto>();
+    private bool _noUpdate = true;
+    private bool _success;
+    private string ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        StoreManangers = await _employeeController.GetActiveEmployeeByRole("Store Manager");
+        Artisans = await _employeeController.GetActiveEmployeeByRole("Artisan");
+        Projects = await _stockController.GetActiveProjects();
+        StockDto = await _stockController.GetActiveStock();
+    }
+
+    private void Remove(StockCheckedOutDto item)
+    {
+        StockDto.Add(item.StockDto);
+        StockCheckedOutDtos.Remove(item);
+    }
+
+    public void Add()
+    {
+        if (SelectedArtisanId == _blankGuid || SelectedStoreManagerId == _blankGuid || SelectedStockId == _blankGuid || SelectedProjectId == _blankGuid)
+        {
+            DisplayError("Please select all the required fields");
+            return;
+        }
+        if (_newStockCheckedOutDto.Qty <= 0)
+        {
+            DisplayError("Quantity cant be less than zero");
+            return;
+        }
+        if (_newStockCheckedOutDto.Qty > _newStockCheckedOutDto.StockDto.CurrentQty)
+        {
+            DisplayError("Not enough items in stock");
+            return;
+        }
+        _newStockCheckedOutDto.Artisan.EmployeeId = SelectedArtisanId;
+        _newStockCheckedOutDto.StoreManager.EmployeeId = SelectedStoreManagerId;
+        _newStockCheckedOutDto.Project.ProjectId = SelectedProjectId;
+        StockCheckedOutDtos.Add(_newStockCheckedOutDto);
+        StockDto.Remove(StockDto.First(x => x.StockId == _newStockCheckedOutDto.StockDto.StockId));
+        _newStockCheckedOutDto = new StockCheckedOutDto();
+        SelectedStockId = _blankGuid;
+    }
+
+    private void DisplayError(string error)
+    {
+        _noUpdate = false;
+        _success = false;
+        ErrorMessage = error;
+    }
+
+    private async Task Save()
+    {
+        bool success = await _stockController.CheckItemsOut(StockCheckedOutDtos);
+        await FinishUpdate(success);
+    }
+
+    private async Task FinishUpdate(bool success)
+    {
+        if (!success)
+            DisplayError("Unable To Save To Database");
+        else
+        {
+            _noUpdate = false;
+            _success = true;
+            StockCheckedOutDtos = new List<StockCheckedOutDto>();
+            StockDto = await _stockController.GetActiveStock();
+            SelectedArtisanId = _blankGuid;
+            SelectedProjectId = _blankGuid;
+            SelectedStoreManagerId = _blankGuid;
+        }
+    }
+}
