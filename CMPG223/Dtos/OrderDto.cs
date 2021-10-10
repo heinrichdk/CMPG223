@@ -5,9 +5,10 @@ namespace CMPG223.Dtos
 {
     public class OrderDto 
     {
-        public Guid Placedbyid { get; set; }
-        public int OrderNumber { get; set; }
+        public Guid OrderId { get; set; }
+        public string OderNumber { get; set; }
         public DateTime DatePlaced { get; set; }
         public DateTime DateRecieved { get; set; }
+        public Guid PlacedById { get; set; }
     }
 }

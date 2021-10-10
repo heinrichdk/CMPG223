@@ -12,6 +12,7 @@ namespace CMPG223.Services
 {
     public interface IDatabaseService
     {
+        Task<List<Order>>GetOrders();
         Task<List<Employee>> GetEmployees();
         Task<List<Employee>> GetEmployeesWhereActive();
         Task<List<Role>> GetRoles();
@@ -26,6 +27,8 @@ namespace CMPG223.Services
         Task<List<Stock>> GetAllStock();
         Task<int> InsertStock(Stock newStock);
         Task<int> UpdateStock(Stock selectedStock);
+        Task<int> InsertOrder(Order order);
+        Task<int> UpdateOrder(Order order);
         Task<List<Project>> GetProjects();
         Task<List<ProjectType>> GetProjectTypes();
         Task<int> UpdateProject(Project createProjectEntity);
@@ -43,6 +46,12 @@ namespace CMPG223.Services
             await using var connection = new SqlConnection(_databaseConnectionString);
             var employees = connection.Query<Employee>("SELECT * FROM employees").ToList();
             return employees.Count == 0 ? new List<Employee>() : employees;
+        }
+        public async Task<List<Order>> GetOrders()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var orders = connection.Query<Order>("SELECT * FROM orders").ToList();
+            return orders.Count == 0 ? new List<Order>() : orders;
         }
 
 
@@ -93,6 +102,18 @@ namespace CMPG223.Services
             await using var connection = new SqlConnection(_databaseConnectionString);
             return await connection.ExecuteAsync($"INSERT INTO Suppliers (Name, Email, ContactNumber, IsActive)" +
                                                  $" VALUES('{supplier.Name}','{supplier.Email}','{supplier.ContactNumber}','{supplier.IsActive}')");
+        }
+        public async Task<int> InsertOrder(Order order)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync($"INSERT INTO Orders (OderNumber, DatePlaced, DateRecieved, PlacedById)" +
+                                                 $" VALUES('{order.OderNumber}','{order.DatePlaced}','{order.DateRecieved}','{order.PlacedById}')");
+        }
+
+        public async Task<int> UpdateOrder(Order order)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync($"UPDATE Orders SET   OderNumber='{order.OderNumber}', DatePlaced='{order.DatePlaced}', DateRecieved='{order.DateRecieved}'  WHERE OrderId = '{order.OrderId}'");
         }
 
         public async Task<int> UpdateSupplier(Supplier supplier)

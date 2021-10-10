@@ -2,62 +2,127 @@
 @using CMPG223.Controllers
 @using CMPG223.Dtos
 @using CMPG223.Models
-@inject ISOrderController _orderController
+@inject  ISOrderController _orderController
+
+
 
 
 <h3>Orders</h3>
 
+@if (_orders == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <div style="float:right;">
+        <label>Search</label>
+        <input @bind="SearchText" />
+    </div>
+
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
+        }
+    }
+
+
 
 <table class="table">
-    <thead>
-        <tr>
-            <th>Requested By</th>
-            <th>Order Number</th>
-            <th>Date Requested</th>
-            <th>Date Received</th>
-            <th>Customer Address</th>
-            <th>Supplier Name</th>
-        </tr>
-    </thead>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Order Number</th>
+                <th>Date Requested</th>
+                <th>Date Received</th>
+                <th>Requested By</th>
 
-    <tbody>
-        @foreach (var st in _order)
-        {
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var st in _orders)
+            { 
             <tr>
                 <td>
-                     @st.Placedbyid
+                    @st.OrderId
                 </td>
                 <td>
-                   @st.OrderNumber
+                    <input @bind="st.OderNumber" />
                 </td>
                 <td>
-                   @st.DatePlaced
+                    <input type="date" value="@st.DatePlaced" />
                 </td>
                 <td>
-                    @st.DateRecieved
+                    <input type="date" value="@st.DateRecieved" />
                 </td>
-
+                <td>
+                    <input @bind=" st.PlacedById" />
+                </td>
                 <td>
                     <MudButton @onclick="@(() => Edit(st))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
                 </td>
             </tr>
-        }
-    </tbody>
+            }
 
-</table>
+            <h3>Add New Order</h3>
+            <tr>
+                <td>
+                    <input @bind="_newOrder.OrderId" />
+                </td>
+                <td>
+                    <input @bind="_newOrder.OderNumber" />
+                </td>
+                <td>
+                    <input type="date" value="" />
+                </td>
+                <td>
+                    <input type="date" value="" />
+                </td>
+                <td>
+                    <input @bind="_newOrder.PlacedById" />
+                </td>
+            </tr>
 
+        </tbody>
+
+    </table>
+}
 
 @code {
+    private string _searchText;
+    private string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            //  FilterOrder(value);
+            _searchText = value;
+        }
+    }
+
 
     bool _noUpdate = true;
     bool _success;
     private OrderDto _newOrder = new();
     private OrderDto SelectedOrder { get; set; }
-    private List<SupplierDto> _suppliers;
-    private List<EmployeeDto> _employee;
-    private List<OrderDto> _order;
-    private List<OrderDetailsDto> orderDetailsDtos;
 
+    private List<OrderDto> _orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _orders = await _orderController.GetAllOrders();
+
+    }
     async Task Edit(OrderDto order)
     {
         SelectedOrder = order;
@@ -69,7 +134,10 @@
         _noUpdate = false;
         _success = success;
 
-        
+        if (success)
+            _orders = await _orderController.GetAllOrders();
     }
+
+
 
 }
