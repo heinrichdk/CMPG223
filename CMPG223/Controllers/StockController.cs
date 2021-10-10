@@ -29,6 +29,7 @@ namespace CMPG223.Controllers
         Task<List<ProjectDto>> GetActiveProjects();
         Task<List<StockDto>> GetActiveStock();
         Task<bool> CheckItemsOut(List<StockCheckedOutDto> stockCheckedOutDtos);
+        Task<List<StockDto>> StockBySupplier(Guid value);
     }
 
     public class StockController : IStockController
@@ -273,9 +274,13 @@ namespace CMPG223.Controllers
 
             return true;
         }
-        
-        
-        
+
+        public async Task<List<StockDto>> StockBySupplier(Guid value)
+        {
+            var stock =  await _databaseService.GetStockBySupplier(value);
+            return await ConvertStockListIntoDto(stock);
+        }
+
 
         private async Task<List<StockDto>> ConvertStockListIntoDto(List<Stock> stock)
         {

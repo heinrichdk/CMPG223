@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 
-namespace CMPG223.Dtos 
+namespace CMPG223.Dtos
 {
     public class OrderDto
     {
-       
-   
         public Guid OrderId { get; set; }
-        public string OderNumber { get; set; }
+        public string OrderNumber { get; set; }
         public DateTime DatePlaced { get; set; }
         public DateTime DateRecieved { get; set; }
-        public Guid PlacedById { get; set; }
+
+        public EmployeeDto PlacedBy { get; set; } = new EmployeeDto();
+        public bool IsExpanded { get; set; } = false;
+
+        public List<OrderDetailsDto> OderDetailsDto { get; set; } = new List<OrderDetailsDto>();
+        public  SupplierDto Supplier { get; set; }
     }
 }

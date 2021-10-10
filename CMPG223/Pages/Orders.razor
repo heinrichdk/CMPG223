@@ -1,15 +1,13 @@
 ﻿@page "/orders"
+@using CMPG223.Controllers
 @using CMPG223.Dtos
-@inject OrdersServices ordersServices
-@inject NavigationManager NavigationManager
+@inject  ISOrderController _orderController
+@inject IEmployeeController _employeeController
+@inject IStockController _stockController
 
-<h3>Orders</h3>
-<NavLink class="nav-link" href="addorder">
-    <span class="oi oi-plus" aria-hidden="true">Add New Orders</span>
+<h2>Orders</h2>
 
-</NavLink>
-
-@if (OrderObj == null)
+@if (_pendingOrders == null)
 {
     <p>
         <em>Loading...</em>
@@ -17,64 +15,380 @@
 }
 else
 {
-
-    <table class="table">
-        <thead>
+    @if (!_noUpdate)
+    {
+        @if (_success)
+        {
+            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@ErrorMessage</MudAlert>
+        }
+    }
+    @if (_pendingOrders.Count > 0)
+    {
+        <table class="table">
+            <tbody>
             <tr>
-                <th>Order ID</th>
-                <th>Order Number</th>
-                <th>Date Requested</th>
-                <th>Date Received</th>
-                <th>Requested By</th>
-
+                <td>
+                    <h3>Recieve Order</h3>
+                </td>
+                <td>
+                    <MudButton @onclick="@(ExpandReceive)" Variant="Variant.Filled" Color="Color.Primary">Show/Hide</MudButton>
+                </td>
             </tr>
-        </thead>
-
-        <tbody>
-            @foreach (var st in OrderObj)
-            {
+            </tbody>
+        </table>
+        if (showReceive)
+        {
+            <table class="table">
+                <thead>
                 <tr>
+                    <th>Order Number</th>
+                    <th>Supplier</th>
+                    <th>Date Requested</th>
+                    <th>Requested By</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var st in _pendingOrders)
+                {
+                    <tr>
+                        <td>
+                            <label>@st.OrderNumber</label>
+                        </td>
+                        <td>
+                            <label>@st.Supplier.Name</label>
+                        </td>
+                        <td>
+                            <label>@st.DatePlaced.ToString("d")</label>
+                        </td>
+                        <td>
+                            <label>@st.PlacedBy.Name @st.PlacedBy.Surname</label>
+                        </td>
+                        <td>
+                            <MudButton @onclick="@(() => ShowOrderDetails(st))" Variant="Variant.Filled" Color="Color.Primary">Show/Hide</MudButton>
+                        </td>
+                    </tr>
+                    if (st.IsExpanded)
+                    {
+                        <tr>
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Stock Item</th>
+                                    <th>Quantity Orderd</th>
+                                    <th>Quantity Received</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var detail in st.OderDetailsDto)
+                                {
+                                    <tr>
+                                        <td>
+                                            <label>@detail.StockDto.Description</label>
+                                        </td>
+                                        <td>
+                                            <label>@detail.QtyOrdered</label>
+                                        </td>
+                                        <td>
+                                            <input type="number" @bind="detail.QtyReceived"/>
+                                        </td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td>
+                                        <MudButton @onclick="@(()=>ReceiveOrder(st))" Variant="Variant.Filled" Color="Color.Primary">Receive Order</MudButton>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </tr>
+                    }
+                }
+                </tbody>
+
+            </table>
+        }
+    }
+    <table class="table">
+        <tbody>
+        <tr>
+            <td>
+                <h3>Place Order</h3>
+            </td>
+            <td>
+                <MudButton @onclick="@(ExpandAdd)" Variant="Variant.Filled" Color="Color.Primary">Show/Hide</MudButton>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    if (showAdd)
+    {
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Order Number</th>
+                <th>Supplier</th>
+                <th>Requested By</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <input @bind="_newOrder.OrderNumber"/>
+                </td>
+                <td>
+                    <select @bind="SelectedSupplierId">
+                        <option>--Select Supplier--</option>
+                        @foreach (var item in _suppliers)
+                        {
+                            <option value="@item.SupplierId">@item.Name</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <select @bind="SelectedAdminId">
+                        <option>--Select Admin--</option>
+                        @foreach (var item in _admins)
+                        {
+                            <option value="@item.EmployeeId">@item.Name @item.Surname</option>
+                        }
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        @if (_newOrder.OderDetailsDto.Count > 0)
+        {
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Stock Item</th>
+                    <th>Quantity Orderd</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+
+                @foreach (var detail in _newOrder.OderDetailsDto)
+                {
+                    <tr>
+                        <td>
+                            <label>@detail.StockDto.Description</label>
+                        </td>
+                        <td>
+                            <label>@detail.QtyOrdered</label>
+                        </td>
+                        <td>
+                            <MudButton @onclick="@(() => RemoveDetails(detail))" Variant="Variant.Filled" Color="Color.Primary">Remove</MudButton>
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td></td>
+                    <td></td>
                     <td>
-                        @st.OrderId
-                    </td>
-                    <td>
-                        @st.OderNumber
-                    </td>
-                    <td>
-                        @st.DatePlaced
-                    </td>
-                    <td>
-                        @st.DateRecieved
-                    </td>
-                    <td>
-                        @st.PlacedById
-                    </td>
-                    <td>
-                        <a class="nav-link" href="EditOrder/@st.OrderId">
-                            <span class="oi oi-pencil" aria-hidden="true">Edit</span>
-                        </a>
-                        <a class="nav-link" href="Delete/@st.OrderId">
-                            <span class="oi oi-trash" aria-hidden="true">Delete</span>
-                        </a>
+                        <MudButton @onclick="@(Save)" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
                     </td>
                 </tr>
-            }
+                </tbody>
+            </table>
+        }
+        if (_stockBySupplier.Count > 0)
+        {
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Stock Item</th>
+                    <th>Quantity Orderd</th>
+                </tr>
+                </thead>
 
-        </tbody>
-
-
-
-    </table>
-   
+                <tbody>
+                <td>
+                    <select @bind="SelectedStockId">
+                        <option>--Select Stock--</option>
+                        @foreach (var item in _stockBySupplier)
+                        {
+                            <option value="@item.StockId">@item.Description</option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <input type="number" @bind="@_newOderDetail.QtyOrdered"/>
+                </td>
+                <td>
+                    <MudButton @onclick="@(AddToNewOrder)" Variant="Variant.Filled" Color="Color.Primary">Add</MudButton>
+                </td>
+                </tbody>
+            </table>
+        }
+    }
 }
 
 @code {
+    private string _searchText;
 
-    List<OrderDto> OrderObj;
-    protected override async Task OnInitializedAsync()
+    private string SearchText
     {
-        OrderObj = await Task.Run(() => ordersServices.GetAllOrdersAsync());
+        get => _searchText;
+        set
+        {
+    //  FilterOrder(value);
+            _searchText = value;
+        }
     }
 
-   
+    private string ErrorMessage { get; set; }
+    bool _noUpdate = true;
+    bool _success;
+    private OrderDetailsDto _newOderDetail { get; set; } = new OrderDetailsDto();
+    private Guid _selectedStockId;
+
+    private Guid SelectedStockId
+    {
+        get => _selectedStockId;
+        set
+        {
+            _selectedStockId = value;
+            if (value != _blankGuid)
+            {
+                _newOderDetail.StockDto = _stockBySupplier.First(x => x.StockId == value);
+            }
+        }
+    }
+
+    private OrderDto _newOrder = new OrderDto();
+    private OrderDto SelectedOrder { get; set; }
+    private bool showAdd;
+    private bool showReceive;
+    private Guid _selectedSupplierId;
+
+    private Guid SelectedSupplierId
+    {
+        get => _selectedSupplierId;
+        set
+        {
+            if (_newOrder.OderDetailsDto.Count > 0)
+                return;
+            _selectedSupplierId = value;
+            if (value != _blankGuid)
+            {
+                _newOrder.Supplier = _suppliers.First(x => x.SupplierId == value);
+                GetSuppliers(value);
+            }
+        }
+    }
+
+    private Guid _blankGuid { get; set; }
+
+    private Guid _selectedAdminId;
+
+    private Guid SelectedAdminId
+    {
+        get => _selectedAdminId;
+        set
+        {
+            if (_newOrder.OderDetailsDto.Count > 0)
+                return;
+            _selectedAdminId = value;
+            if (value != _blankGuid)
+            {
+                _newOrder.PlacedBy = _admins.First(x => x.EmployeeId == value);
+            }
+        }
+    }
+
+    private List<EmployeeDto> _admins = new List<EmployeeDto>();
+    private List<OrderDto> _pendingOrders = new List<OrderDto>();
+    private List<SupplierDto> _suppliers = new List<SupplierDto>();
+    private List<StockDto> _stockBySupplier = new List<StockDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _admins = await _employeeController.GetActiveEmployeeByRole("Admin");
+        _suppliers = await _stockController.GetActiveSuppliers();
+        _pendingOrders = await _orderController.GetPendingOrders();
+    }
+
+    private async void GetSuppliers(Guid value)
+    {
+        _stockBySupplier = await _stockController.StockBySupplier(value);
+    }
+
+
+    public void ExpandReceive()
+    {
+        showReceive = !showReceive;
+    }
+
+    private void ShowOrderDetails(OrderDto st)
+    {
+        st.IsExpanded = !st.IsExpanded;
+    }
+
+    private void ExpandAdd()
+    {
+        showAdd = !showAdd;
+    }
+
+    private async void Save()
+    {
+        bool success = await _orderController.InsertOrder(_newOrder);
+        if (success)
+        {
+            _noUpdate = false;
+            _newOrder = new OrderDto();
+            _pendingOrders = await _orderController.GetPendingOrders();
+        }
+        
+    }
+
+    private void AddToNewOrder()
+    {
+        if (string.IsNullOrEmpty(_newOrder.OrderNumber) || _selectedSupplierId == _blankGuid || _selectedAdminId == _blankGuid || SelectedStockId == _blankGuid || _newOderDetail.QtyOrdered <= 0)
+        {
+            DisplayError("Please select all the required fields");
+            return;
+        }
+        _newOrder.OderDetailsDto.Add(_newOderDetail);
+        _newOderDetail = new OrderDetailsDto();
+    }
+
+    private void DisplayError(string error)
+    {
+        _noUpdate = false;
+        _success = false;
+        ErrorMessage = error;
+    }
+
+    private void RemoveDetails(OrderDetailsDto detail)
+    {
+        _newOrder.OderDetailsDto.Remove(detail);
+    }
+
+
+    private async Task ReceiveOrder(OrderDto st)
+    {
+        bool success = await _orderController.ReceiveOrder(st);
+        _noUpdate = false;
+        if (success)
+        {
+         
+            _success = true;
+            _newOrder = new OrderDto();
+            _pendingOrders = await _orderController.GetPendingOrders();
+        }
+        else
+        {
+            _success = false;
+            DisplayError("Unable To Save To Database");
+        }
+    }
+
 }
