@@ -10,104 +10,174 @@ namespace CMPG223.Controllers
 {
     public interface ISOrderController
     {
-        Task<List<OrderDto>> GetAllOrders();
         Task<bool> InsertOrder(OrderDto orderDto);
-        Task<bool> UpdateOrder(OrderDto orderDto);
-        
-
-
-      
+        Task<List<OrderDto>> GetPendingOrders();
+        Task<bool> ReceiveOrder(OrderDto newOrder);
     }
 
-    public class OrderController:ISOrderController 
+    public class OrderController : ISOrderController
     {
         private readonly IDatabaseService _databaseService;
-        public OrderController(IDatabaseService databaseService) 
+
+        public OrderController(IDatabaseService databaseService)
         {
             _databaseService = databaseService;
         }
+        
 
-        public async Task <List<OrderDto>> GetAllOrders() 
+        public async Task<bool> InsertOrder(OrderDto orderDto)
         {
-            var orders = await _databaseService.GetOrders();
-            return await ConvertOrdersListDto(orders).ConfigureAwait(false);
-        }
-
-        public async Task<bool> InsertOrder(OrderDto orderDto) 
-        {
-            if (CheckOrdersDto(orderDto)) 
+            bool success = true;
+            if (CheckOrdersDto(orderDto))
             {
                 Order order = new Order
                 {
-                    OderNumber = orderDto.OderNumber,
-                    DatePlaced = orderDto.DatePlaced,
-                    DateRecieved = orderDto.DateRecieved,
-                    PlacedById = orderDto.PlacedById
+                    OderNumber = orderDto.OrderNumber,
+                    DatePlaced = DateTime.Now,
+                    PlacedById = orderDto.PlacedBy.EmployeeId,
+                    SupplierFk = orderDto.Supplier.SupplierId
                 };
-                return await _databaseService.InsertOrder(order) != 0;
+                var id = await _databaseService.InsertOrder(order);
+                if (id == Guid.Empty)
+                    return false;
+                else
+                    foreach (var detail in orderDto.OderDetailsDto)
+                    {
+                        OrderDetails od = new OrderDetails()
+                        {
+                            OrderFk = id,
+                            QtyOrdered = detail.QtyOrdered,
+                            StockFk = detail.StockDto.StockId
+                        };
+                        success = await _databaseService.InsertOderDetails(od) != 0;
+                        if (!success)
+                            return false;
+                    }
             }
-            return false;
+
+            return true;
         }
-        public async Task<bool> UpdateOrder(OrderDto orderDto) 
+
+        public async Task<bool> UpdateOrder(OrderDto orderDto)
         {
             Order order = new Order
             {
-                OderNumber = orderDto.OderNumber,
+                OderNumber = orderDto.OrderNumber,
                 DatePlaced = orderDto.DatePlaced,
                 DateRecieved = orderDto.DateRecieved,
-                PlacedById = orderDto.PlacedById
+                //PlacedById = orderDto.PlacedById
             };
             return await _databaseService.UpdateOrder(order) != 0;
         }
-        private bool CheckOrdersDto(OrderDto newOrder)
-        {
-           return !string.IsNullOrWhiteSpace(newOrder.OderNumber);
-         }
-        private async Task<List<Order>> GetOrders()
-        {
-            return await _databaseService.GetOrders();
-        }
 
-        private async Task< List<OrderDto> >ConvertOrdersListDto(List<Order> order) 
+        public async Task<List<OrderDto>> GetPendingOrders()
         {
-            var placedorders = await GetAllOrders();
+            var orders = await _databaseService.GetPendingOrders();
+            List<OrderDto> lst = new List<OrderDto>();
+            var suppliers = await _databaseService.GetSuppliers();
+            var employees = await _databaseService.GetEmployees();
+            var orderDetails = await _databaseService.GetOrderDetails();
+            var stock = await _databaseService.GetAllStock();
 
-            var lst = new List<OrderDto>();
-            foreach (var st in order)
+            foreach (var order in orders)
             {
-
-                
-                OrderDto sDto = new OrderDto
+                OrderDto dto = new OrderDto()
                 {
-                    OrderId = st.OrderId,
-                    OderNumber = st.OderNumber,
-                    DatePlaced = st.DatePlaced,
-                    DateRecieved = st.DateRecieved,
-                    PlacedById = st.PlacedById,
-                  //  SupplierDto = new SupplierDto()
-                   //// {
-                    //    SupplierId = sup.SupplierId,
-                    //    Name = sup.Name,
-                    //    IsActive = sup.IsActive,
-                  //     Email = sup.Email,
-                  //      ContactNumber = sup.ContactNumber
-                 //   }
+                    Supplier = CreateSuppierDto(suppliers.First(x => x.SupplierId == order.SupplierFk)),
+                    DatePlaced = order.DatePlaced,
+                    OrderId = order.OrderId,
+                    OrderNumber = order.OderNumber,
+                    PlacedBy = CreateEmployeeDto(employees.First(x => x.EmployeeId == order.PlacedById)),
+                    OderDetailsDto = new List<OrderDetailsDto>()
                 };
-                lst.Add(sDto);
+                foreach (var od in orderDetails.FindAll(x => x.OrderFk == order.OrderId))
+                {
+                    dto.OderDetailsDto.Add(CreateDetailsDto(od, stock.First(x => x.StockId == od.StockFk)));
+                }
+
+                lst.Add(dto);
             }
+
             return lst;
         }
 
-        private OrderDto ConvertOrderToDto(Order order)
+        public async Task<bool> ReceiveOrder(OrderDto newOrder)
         {
-            return new OrderDto()
+            Order dto = new Order()
             {
-                PlacedById = order.PlacedById,
-                DateRecieved = order.DateRecieved,
-                DatePlaced = order.DatePlaced,
-                OderNumber = order.OderNumber,
-                OrderId = order.OrderId
+                DateRecieved = DateTime.Now,
+                OrderId = newOrder.OrderId
             };
+            foreach (var od in newOrder.OderDetailsDto)
+            {
+                OrderDetails orderDetails = new OrderDetails()
+                {
+                    QtyRecieved = od.QtyReceived,
+                    OrderDetailsId = od.OrderDetailsId
+                };
+                if ( await _databaseService.ReceiveOrderDetails(orderDetails) == 0)
+                    return false;
+                Stock st = new Stock()
+                {
+                    CurrentQty = od.StockDto.CurrentQty + od.QtyOrdered,
+                    StockId = od.StockDto.StockId
+                };
+                if ( await _databaseService.UpdateStockQty(st) == 0)
+                    return false;
+            }
+            if ( await _databaseService.ReceiveOrder(dto) == 0)
+                return false;
+            return true;
+        }
+
+        private OrderDetailsDto CreateDetailsDto(OrderDetails od, Stock stock)
+        {
+            return new OrderDetailsDto
+            {
+                QtyOrdered = od.QtyOrdered,
+                QtyReceived = od.QtyRecieved,
+                OrderDetailsId = od.OrderDetailsId,
+                StockDto = new StockDto()
+                {
+                    Description = stock.Discription,
+                    CurrentQty = stock.CurrentQty,
+                    IsActive = stock.IsActive,
+                    MaxQty = stock.MaxQty,
+                    StockId = stock.StockId,
+                    SupplierDto = new SupplierDto()
+                }
+            };
+        }
+
+        private EmployeeDto CreateEmployeeDto(Employee first)
+        {
+            return new EmployeeDto()
+            {
+                EmployeeId = first.EmployeeId,
+                Name = first.Name,
+                Surname = first.Surname
+            };
+        }
+
+        private SupplierDto CreateSuppierDto(Supplier first)
+        {
+            return new SupplierDto()
+            {
+                Email = first.Email,
+                Name = first.Name, ContactNumber = first.ContactNumber,
+                IsActive = first.IsActive,
+                SupplierId = first.SupplierId
+            };
+        }
+
+        private bool CheckOrdersDto(OrderDto newOrder)
+        {
+            return !string.IsNullOrWhiteSpace(newOrder.OrderNumber);
+        }
+
+        private async Task<List<Order>> GetOrders()
+        {
+            return await _databaseService.GetOrders();
         }
     }
 }

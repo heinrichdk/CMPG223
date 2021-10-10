@@ -27,7 +27,7 @@ namespace CMPG223.Services
         Task<List<Stock>> GetAllStock();
         Task<int> InsertStock(Stock newStock);
         Task<int> UpdateStock(Stock selectedStock);
-        Task<int> InsertOrder(Order order);
+        Task<Guid> InsertOrder(Order order);
         Task<int> UpdateOrder(Order order);
         Task<List<Project>> GetProjects();
         Task<List<ProjectType>> GetProjectTypes();
@@ -38,15 +38,23 @@ namespace CMPG223.Services
         Task<List<Project>> GetActiveProjects();
         Task<List<Stock>> GetActiveStock();
         Task<int> StockCheckedOut(StockCheckedOut check);
+        Task<List<Stock>> GetStockBySupplier(Guid value);
+        Task<int> InsertOderDetails(OrderDetails od);
+        Task<List<Order>> GetPendingOrders();
+        Task<List<OrderDetails>> GetOrderDetails();
+        Task<int> ReceiveOrderDetails(OrderDetails orderDetails);
+        Task<int> ReceiveOrder(Order order);
+        Task<int> UpdateStockQty(Stock st);
     }
 
     public class DatabaseService : IDatabaseService
     {
-        //Morena String
-        // private readonly string _databaseConnectionString =
-        // $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
         private readonly string _databaseConnectionString =
-            $"Data Source=TINUSLAPTOP;Initial Catalog=CMPG223;Integrated Security=True";
+           // $"Data Source=PCD-MOREMOEK\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+           // $"Data Source=TINUSLAPTOP;Initial Catalog=CMPG223;Integrated Security=True";
+           $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+
+        private IDatabaseService _databaseServiceImplementation;
 
         public async Task<List<Employee>> GetEmployees()
         {
@@ -112,12 +120,14 @@ namespace CMPG223.Services
                                                  $" VALUES('{supplier.Name}','{supplier.Email}','{supplier.ContactNumber}','{supplier.IsActive}')");
         }
 
-        public async Task<int> InsertOrder(Order order)
+        public async Task<Guid> InsertOrder(Order order)
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
-            return await connection.ExecuteAsync(
-                $"INSERT INTO Orders (OderNumber, DatePlaced, DateRecieved, PlacedById)" +
-                $" VALUES('{order.OderNumber}','{order.DatePlaced}','{order.DateRecieved}','{order.PlacedById}')");
+            var sql =
+                $"DECLARE @RSGUID uniqueidentifier; SET @RSGUID = NEWID();INSERT INTO Orders (OrderId, OderNumber, DatePlaced, PlacedById, SupplierFk)" +
+                $" VALUES(@RSGUID,'{order.OderNumber}','{order.DatePlaced}','{order.PlacedById}', '{order.SupplierFk}')" +
+                $" Select @RSGUID";
+            return await connection.ExecuteScalarAsync<Guid>(sql);
         }
 
         public async Task<int> UpdateOrder(Order order)
@@ -239,6 +249,61 @@ namespace CMPG223.Services
             return await connection.ExecuteAsync(
                 $"INSERT INTO StockCheckedOut (Qty , Date, StoreManagerFk, ArtisanFk, ProjectFk, StockFk)" +
                 $" VALUES('{check.Qty}','{check.Date}','{check.StoreManagerFk}','{check.ArtisanFk}','{check.ProjectFk}','{check.StockFk}')");
+        }
+
+        public async Task<List<Stock>> GetStockBySupplier(Guid value)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var stock = connection.Query<Stock>($"SELECT * FROM Stock WHERE IsActive = '1' AND supplierFk = '{value}'")
+                .ToList();
+            return stock.Count == 0 ? new List<Stock>() : stock;
+        }
+
+        public async Task<int> InsertOderDetails(OrderDetails od)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync(
+                $"INSERT INTO OrderDetails (OrderFk , StockFk, QtyRecieved, QtyOrdered)" +
+                $" VALUES('{od.OrderFk}','{od.StockFk}', 0 ,'{od.QtyOrdered}')");
+        }
+
+        public async Task<List<Order>> GetPendingOrders()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var orders = connection.Query<Order>($"SELECT * FROM Orders WHERE DateRecieved IS NULL")
+                .ToList();
+            return orders.Count == 0 ? new List<Order>() : orders;
+        }
+
+        public async Task<List<OrderDetails>> GetOrderDetails()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var orders = connection
+                .Query<OrderDetails>(
+                    $"SELECT * FROM OrderDetails od JOIN orders o on O.OrderId = od.OrderFk WHERE o.DateRecieved IS NULL")
+                .ToList();
+            return orders.Count == 0 ? new List<OrderDetails>() : orders;
+        }
+
+        public async Task<int> ReceiveOrderDetails(OrderDetails orderDetails)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync(
+                $"UPDATE OrderDetails SET QtyRecieved = {orderDetails.QtyRecieved} WHERE OrderDetailsId = '{orderDetails.OrderDetailsId}'");
+        }
+
+        public async Task<int> ReceiveOrder(Order order)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync(
+                $"UPDATE Orders SET DateRecieved = '{order.DateRecieved}' WHERE OrderId = '{order.OrderId}'");
+        }
+
+        public async Task<int> UpdateStockQty(Stock st)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync(
+                $"UPDATE Stock SET  CurrentQty = '{st.CurrentQty}' WHERE StockId = '{st.StockId}'");
         }
     }
 }

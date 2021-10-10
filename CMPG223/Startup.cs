@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CMPG223.Services;
 using MudBlazor.Services;
+using CMPG223.Dtos;
 
 namespace CMPG223
 {
@@ -30,6 +31,7 @@ namespace CMPG223
             services.AddMudServices();
             services.AddTransient<IStockController, StockController>();
             services.AddTransient<ISOrderController, OrderController>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

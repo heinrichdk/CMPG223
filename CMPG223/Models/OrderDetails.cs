@@ -6,10 +6,10 @@ namespace CMPG223.Models
     
    {
         public Guid OrderDetailsId { get; set; }
-        public Guid StockId_fk { get; set; }
-        public Guid OrderId_fk { get; set; }
+        public Guid StockFk { get; set; }
+        public Guid OrderFk { get; set; }
         public int QtyOrdered { get; set; }
-        public int QtyReceived { get; set; }
+        public int QtyRecieved { get; set; }
     
     }
 }
