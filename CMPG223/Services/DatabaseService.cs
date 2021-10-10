@@ -24,6 +24,7 @@ namespace CMPG223.Services
         Task<int> UpdateSupplier(Supplier supplier);
         Task<List<Supplier>> GetActiveSuppliers();
         Task<List<Stock>> GetActiveStock();
+        Task<List<Stock>> GetStockToOrder();
         Task<List<Stock>> GetAllStock();
         Task<int> InsertStock(Stock newStock);
         Task<int> UpdateStock(Stock selectedStock);
@@ -134,6 +135,13 @@ namespace CMPG223.Services
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
             var stock = connection.Query<Stock>("SELECT * FROM Stock WHERE IsActive = '1'").ToList();
+            return stock.Count == 0 ? new List<Stock>() : stock;
+        }
+
+        public async Task<List<Stock>> GetStockToOrder()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var stock = connection.Query<Stock>("SELECT st.* FROM Stock st JOIN Suppliers sup ON st.SupplierFk = sup.SupplierId WHERE sup.IsActive = '1' AND st.IsActive = 'true' AND st.MaxQty * 0.3 >= st.CurrentQty").ToList();
             return stock.Count == 0 ? new List<Stock>() : stock;
         }
 

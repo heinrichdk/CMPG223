@@ -4,7 +4,7 @@
 @inject IStockController _stockController
 
 <h3>What To Order Report</h3>
-<div style="margin: 200px" id="pint_div">
+<div id="pint_div">
     <div style="float:right;">
         <label>Date: </label>
         <label>@Date </label>
@@ -12,47 +12,37 @@
     <h4>Order Report</h4>
 </div>
 
-<div>
-    @foreach (var supplier in _suppliers)
-    {
-        <h4>@supplier.Name ContactNumber:@supplier.ContactNumber Email:@supplier.Email </h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Quatity to Order</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var stock in _acctiveStockToOrder.FindAll(x => x.SupplierDto.SupplierId == @supplier.SupplierId))
-                {
-                    <tr>
-                        <td>
-                            @stock.Description
-                        </td>
-                        <td>
-                            <select @bind="stock.SupplierDto.SupplierId">
-                                <option>--Select Role--</option>
-                                @foreach (var item in _suppliers)
-                                {
-                                    <option value="@item.SupplierId">@item.Name</option>
-                                }
-                            </select>
-                        </td>
-                        <td>
-                            <label>@stock.CurrentQty</label>
-                        </td>
-                        <td>
-                            <input @bind="stock.MaxQty" />
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>}
+    <table  cellspacing="5">
+        <thead>
+            <tr>
+                <th>Description  </th>
+                <th>Quatity to Order  </th>
+                <th>Supplier  </th>
+            </tr>
+        </thead>
 
-</div>
-<input type="button" onclick="printdiv('pint_div')">
-<input type="button" onclick="printdiv('pint_div')">
+    @foreach (var stock in _acctiveStockToOrder)
+     {           
+            <tbody>
+            <tr>
+                <td>
+                    <label> @stock.Description </label>
+                </td>
+                <td>
+                    <label> @(stock.MaxQty-stock.CurrentQty) </label> 
+                </td>
+                <td>
+                    <label> @stock.SupplierDto.Name </label>
+                </td>
+            </tr>
+            </tbody>        
+     }
+    </table>
+    <div>
+        <input type="button" onclick="printdiv('pint_div')">
+        <input type="button" onclick="printdiv('pint_div')">
+    </div>
+
 
 @code {
 
@@ -64,7 +54,6 @@
     protected override async Task OnInitializedAsync()
     {
         _suppliers = await _stockController.GetActiveSuppliers();
-        _acctiveStockToOrder = await _stockController.GetActiveStock();
-
+        _acctiveStockToOrder = await _stockController.GetStockToOrder();
     }
 }
