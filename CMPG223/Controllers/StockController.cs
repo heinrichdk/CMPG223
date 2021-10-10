@@ -33,6 +33,7 @@ namespace CMPG223.Controllers
 
         Task<List<StockCheckedOutDto>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId, DateTime startDate,
             DateTime endDate);
+        Task<List<StockCheckedOutDto>> GetCheckoutStockByProjectId(Guid projectId);
     }
 
     public class StockController : IStockController
@@ -288,11 +289,23 @@ namespace CMPG223.Controllers
         {
             var checkedOutStock =
                 await _databaseService.GetCheckoutStockByStoreManager(selectedStoreManagerId, startDate, endDate);
+            return await ConvertStockCheckoutDto(checkedOutStock);
+        }
+
+        public async Task<List<StockCheckedOutDto>> GetCheckoutStockByProjectId(Guid projectId)
+        {
+            var checkedOutStock =
+                await _databaseService.GetCheckoutStockByProjectId(projectId);
+            return await ConvertStockCheckoutDto(checkedOutStock);
+        }
+
+        private async Task<List<StockCheckedOutDto>> ConvertStockCheckoutDto(List<StockCheckedOut> stockCheckedOuts)
+        {
             var lst = new List<StockCheckedOutDto>();
             var employees = await _databaseService.GetEmployeesWhereActive();
             var projects = await _databaseService.GetProjects();
             var stock = await _databaseService.GetAllStock();
-            foreach (var item in checkedOutStock)
+            foreach (var item in stockCheckedOuts)
             {
                 var dt = new StockCheckedOutDto()
                 {
