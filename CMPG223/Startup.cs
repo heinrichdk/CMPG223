@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CMPG223.Services;
 using MudBlazor.Services;
+using CMPG223.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace CMPG223
 {
@@ -25,11 +27,17 @@ namespace CMPG223
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSingleton<WeatherForecastService>();
+            services.AddScoped<OrdersServices>();
             services.AddSingleton<IDatabaseService, DatabaseService>();
             services.AddTransient<IEmployeeController, EmployeeController>();
             services.AddMudServices();
             services.AddTransient<IStockController, StockController>();
-            services.AddTransient<ISOrderController, OrderController>();
+            //services.AddTransient<ISOrderController, OrderController>();
+
+            #region Connection String
+            services.AddDbContext<AppDBContext>(item => item.UseSqlServer(Configuration.GetConnectionString("myconn")));
+            #endregion
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

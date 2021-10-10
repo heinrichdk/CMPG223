@@ -1,0 +1,58 @@
+﻿@page "/addorder"
+@using CMPG223.Dtos
+@inject OrdersServices ordersServices
+
+@inject NavigationManager NavigationManager
+
+<h2>Add Orders</h2>
+<hr />
+<form>
+    <div class="row">
+        <div class="col-md-8">
+
+            <div class="form-group">
+                <label for="Name" class="control-label">Order Number</label>
+                <input form="Name" class="form-control" @bind="@obj.OderNumber" />
+            </div>
+            <div class="form-group">
+                <label for="Name" class="control-label">Date Placed</label>
+                <InputDate class="form-control" @bind-Value="@obj.DatePlaced" />
+            </div>
+            <div class="form-group">
+                <label for="Name" class="control-label">Date Received</label>
+                <InputDate class="form-control" @bind-Value="@obj.DateRecieved" />
+            </div>
+            <div class="form-group">
+                <label for="Name" class="control-label">Requested By</label>
+                <input form="Name" class="form-control" @bind="@obj.PlacedById" />
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@CreateOrder" value="Save" />
+                <input type="button" class="btn btn-primary" @onclick="@Cancel" value="Cancel" />
+            </div>
+
+        </div>
+    </div>
+
+</form>
+
+@code
+{
+    OrderDto obj = new OrderDto();
+    protected async void CreateOrder()
+    {
+        await ordersServices.InsertOrdersAsync(obj);
+        NavigationManager.NavigateTo("Orders");
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Orders");
+    }
+}

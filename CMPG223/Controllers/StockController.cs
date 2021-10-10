@@ -141,7 +141,7 @@ namespace CMPG223.Controllers
                 {
                     ProjectNumber = project.ProjectNumber,
                     ProjectId = project.ProjectId,
-                    ProjectType = await CreateTypeDto(type),
+                    ProjectType = CreateTypeDto(type),
                     IsActive = project.IsActive
                 };
                 lst.Add(dto);
@@ -153,22 +153,22 @@ namespace CMPG223.Controllers
         public async Task<List<ProjectTypeDto>> GetProjectTypes()
         {
             List<ProjectType> types = await _databaseService.GetProjectTypes();
-            return await CreateTypeDtoList(types);
+            return CreateTypeDtoList(types);
         }
 
-        private async Task<List<ProjectTypeDto>> CreateTypeDtoList(List<ProjectType> types)
+        private List<ProjectTypeDto> CreateTypeDtoList(List<ProjectType> types)
         {
             var lst = new List<ProjectTypeDto>();
             foreach (var type in types)
             {
-                var dto = await CreateTypeDto(type);
+                var dto = CreateTypeDto(type);
                 lst.Add(dto);
             }
 
             return lst;
         }
 
-        private async Task<ProjectTypeDto> CreateTypeDto(ProjectType type)
+        private ProjectTypeDto CreateTypeDto(ProjectType type)
         {
             return new ProjectTypeDto()
             {

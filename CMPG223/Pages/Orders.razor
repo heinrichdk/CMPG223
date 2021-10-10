@@ -1,15 +1,15 @@
 ﻿@page "/orders"
-@using CMPG223.Controllers
 @using CMPG223.Dtos
-@using CMPG223.Models
-@inject  ISOrderController _orderController
-
-
-
+@inject OrdersServices ordersServices
+@inject NavigationManager NavigationManager
 
 <h3>Orders</h3>
+<NavLink class="nav-link" href="addorder">
+    <span class="oi oi-plus" aria-hidden="true">Add New Orders</span>
 
-@if (_orders == null)
+</NavLink>
+
+@if (OrderObj == null)
 {
     <p>
         <em>Loading...</em>
@@ -17,26 +17,8 @@
 }
 else
 {
-    <div style="float:right;">
-        <label>Search</label>
-        <input @bind="SearchText" />
-    </div>
 
-    @if (!_noUpdate)
-    {
-        @if (_success)
-        {
-            <MudAlert Severity="Severity.Success" Variant="Variant.Filled">Database Updated</MudAlert>
-        }
-        else
-        {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Unable To Save To Database</MudAlert>
-        }
-    }
-
-
-
-<table class="table">
+    <table class="table">
         <thead>
             <tr>
                 <th>Order ID</th>
@@ -49,95 +31,50 @@ else
         </thead>
 
         <tbody>
-            @foreach (var st in _orders)
-            { 
-            <tr>
-                <td>
-                    @st.OrderId
-                </td>
-                <td>
-                    <input @bind="st.OderNumber" />
-                </td>
-                <td>
-                    <input type="date" value="@st.DatePlaced" />
-                </td>
-                <td>
-                    <input type="date" value="@st.DateRecieved" />
-                </td>
-                <td>
-                    <input @bind=" st.PlacedById" />
-                </td>
-                <td>
-                    <MudButton @onclick="@(() => Edit(st))" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
-                </td>
-            </tr>
+            @foreach (var st in OrderObj)
+            {
+                <tr>
+                    <td>
+                        @st.OrderId
+                    </td>
+                    <td>
+                        @st.OderNumber
+                    </td>
+                    <td>
+                        @st.DatePlaced
+                    </td>
+                    <td>
+                        @st.DateRecieved
+                    </td>
+                    <td>
+                        @st.PlacedById
+                    </td>
+                    <td>
+                        <a class="nav-link" href="EditOrder/@st.OrderId">
+                            <span class="oi oi-pencil" aria-hidden="true">Edit</span>
+                        </a>
+                        <a class="nav-link" href="Delete/@st.OrderId">
+                            <span class="oi oi-trash" aria-hidden="true">Delete</span>
+                        </a>
+                    </td>
+                </tr>
             }
-
-            <h3>Add New Order</h3>
-            <tr>
-                <td>
-                    <input @bind="_newOrder.OrderId" />
-                </td>
-                <td>
-                    <input @bind="_newOrder.OderNumber" />
-                </td>
-                <td>
-                    <input type="date" value="" />
-                </td>
-                <td>
-                    <input type="date" value="" />
-                </td>
-                <td>
-                    <input @bind="_newOrder.PlacedById" />
-                </td>
-            </tr>
 
         </tbody>
 
+
+
     </table>
+   
 }
 
 @code {
-    private string _searchText;
-    private string SearchText
-    {
-        get => _searchText;
-        set
-        {
-            //  FilterOrder(value);
-            _searchText = value;
-        }
-    }
 
-
-    bool _noUpdate = true;
-    bool _success;
-    private OrderDto _newOrder = new();
-    private OrderDto SelectedOrder { get; set; }
-
-    private List<OrderDto> _orders;
-
+    List<OrderDto> OrderObj;
     protected override async Task OnInitializedAsync()
     {
-
-        _orders = await _orderController.GetAllOrders();
-
-    }
-    async Task Edit(OrderDto order)
-    {
-        SelectedOrder = order;
-        var success = await _orderController.UpdateOrder(SelectedOrder);
-        await FinishUpdate((success));
-    }
-    private async Task FinishUpdate(bool success)
-    {
-        _noUpdate = false;
-        _success = success;
-
-        if (success)
-            _orders = await _orderController.GetAllOrders();
+        OrderObj = await Task.Run(() => ordersServices.GetAllOrdersAsync());
     }
 
-
-
+   
 }
