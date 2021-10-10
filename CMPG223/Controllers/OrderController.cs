@@ -119,7 +119,7 @@ namespace CMPG223.Controllers
                     return false;
                 Stock st = new Stock()
                 {
-                    CurrentQty = od.StockDto.CurrentQty + od.QtyOrdered,
+                    CurrentQty = od.StockDto.CurrentQty + od.QtyReceived,
                     StockId = od.StockDto.StockId
                 };
                 if ( await _databaseService.UpdateStockQty(st) == 0)

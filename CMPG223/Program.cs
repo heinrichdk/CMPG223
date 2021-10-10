@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 
 //Team
 //Heinrich de Klerk 24323667
-
+//JM Meyer 30274044
+//Morena Moeketsie  
 namespace CMPG223
 {
     public class Program
