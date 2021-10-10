@@ -45,6 +45,7 @@ namespace CMPG223.Services
         Task<int> ReceiveOrder(Order order);
         Task<int> UpdateStockQty(Stock st);
         Task<List<StockCheckedOut>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId, DateTime startDate, DateTime endDate);
+        Task<List<StockCheckedOut>> GetCheckoutStockByProjectId(Guid projectId);
     }
 
     public class DatabaseService : IDatabaseService
@@ -306,6 +307,15 @@ namespace CMPG223.Services
             var st = connection
                 .Query<StockCheckedOut>(
                     $"SELECT * FROM StockCheckedOut  WHERE StoreManagerFk = '{selectedStoreManagerId}' AND  CAST(Date AS DATE) <=  CAST('{endDate.Date}' AS DATE) AND CAST(Date AS DATE) >= CAST('{startDate.Date}' AS DATE)")
+                .ToList();
+            return st.Count == 0 ? new List<StockCheckedOut>() : st;
+        }
+        public async Task<List<StockCheckedOut>> GetCheckoutStockByProjectId(Guid projectId)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var st = connection
+                .Query<StockCheckedOut>(
+                    $"SELECT * FROM StockCheckedOut  WHERE ProjectFk = '{projectId}'")
                 .ToList();
             return st.Count == 0 ? new List<StockCheckedOut>() : st;
         }

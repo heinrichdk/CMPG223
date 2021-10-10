@@ -25,7 +25,6 @@ namespace CMPG223
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
             services.AddSingleton<IDatabaseService, DatabaseService>();
             services.AddTransient<IEmployeeController, EmployeeController>();
             services.AddMudServices();
