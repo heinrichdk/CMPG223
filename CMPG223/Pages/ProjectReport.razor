@@ -1,6 +1,56 @@
 ﻿@page "/ProjectReport"
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@using CMPG223.Models
+
 <h3>ProjectReport</h3>
 
+<select @bind="SelectProjectNumber">
+    <option>Select a Project Number-</option>
+    @foreach (var item in StockC)
+    {
+        <option value="@item.Project.ProjectNumber"></option>
+    }
+</select>
+
+<br/>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Store Manager</th>
+            <th>Artisan</th>
+            <th>Items Checked out</th>
+        </tr>
+    </thead>
+    <tbody>
+        <td>
+            
+        </td>
+        <td>
+            
+        </td>
+
+    </tbody>
+</table>
+
 @code {
-    
+
+
+    private Guid _selectedProjectNumber;
+
+    private Guid SelectProjectNumber
+    {
+        get => _selectedProjectNumber;
+        set
+        {
+            _selectedProjectNumber = value;
+            if (value != Guid.Empty)
+                _selectedProject = StockC.First(x => x.StockCheckedOutId == value);
+        }
+    }
+
+    private StockCheckedOutDto _selectedProject;
+    private List<StockCheckedOutDto> StockC = new List<StockCheckedOutDto>();
+
+
 }

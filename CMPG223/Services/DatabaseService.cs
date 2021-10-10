@@ -52,7 +52,7 @@ namespace CMPG223.Services
         private readonly string _databaseConnectionString =
            // $"Data Source=PCD-MOREMOEK\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
            // $"Data Source=TINUSLAPTOP;Initial Catalog=CMPG223;Integrated Security=True";
-           $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+           $"Data Source=TINUSLAPTOP;Initial Catalog=CMPG223;Integrated Security=True";
 
         private IDatabaseService _databaseServiceImplementation;
 
