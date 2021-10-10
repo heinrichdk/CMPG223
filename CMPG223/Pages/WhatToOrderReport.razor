@@ -3,13 +3,12 @@
 @using CMPG223.Dtos
 @inject IStockController _stockController
 
-<h3>What To Order Report</h3>
 <div id="pint_div">
     <div style="float:right;">
         <label>Date: </label>
         <label>@Date </label>
     </div>
-    <h4>Order Report</h4>
+    <h3>Order Report</h3>
 </div>
 
     <table  cellspacing="5">
@@ -38,10 +37,6 @@
             </tbody>        
      }
     </table>
-    <div>
-        <input type="button" onclick="printdiv('pint_div')">
-        <input type="button" onclick="printdiv('pint_div')">
-    </div>
 
 
 @code {
