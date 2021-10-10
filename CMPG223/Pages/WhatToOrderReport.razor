@@ -11,7 +11,8 @@
     <h3>Order Report</h3>
 </div>
 
-    <table  cellspacing="5">
+<div id="report data">
+    <table class="table">
         <thead>
             <tr>
                 <th>Description  </th>
@@ -20,23 +21,27 @@
             </tr>
         </thead>
 
-    @foreach (var stock in _acctiveStockToOrder)
-     {           
+        @foreach (var stock in _acctiveStockToOrder)
+         {
             <tbody>
-            <tr>
-                <td>
-                    <label> @stock.Description </label>
-                </td>
-                <td>
-                    <label> @(stock.MaxQty-stock.CurrentQty) </label> 
-                </td>
-                <td>
-                    <label> @stock.SupplierDto.Name </label>
-                </td>
-            </tr>
-            </tbody>        
-     }
+                <tr>
+                    <td>
+                        <label> @stock.Description </label>
+                    </td>
+                    <td>
+                        <label> @(stock.MaxQty-stock.CurrentQty) </label>
+                    </td>
+                    <td>
+                        <label> @stock.SupplierDto.Name </label>
+                    </td>
+                </tr>
+            </tbody>
+
+         }
     </table>
+</div>
+
+<button>Print</button>
 
 
 @code {
