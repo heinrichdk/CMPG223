@@ -10,6 +10,6 @@ namespace CMPG223.Dtos
         public  string Description { get; set; }
         
         public  bool IsActive { get; set; }
-        public  SupplierDto SupplierDto { get; set; }
+        public SupplierDto SupplierDto { get; set; } = new SupplierDto();
     }
 }

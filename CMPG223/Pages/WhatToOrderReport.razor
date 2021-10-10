@@ -1,14 +1,54 @@
-﻿@page "/whattoorderreport"
-<h3>What To Order Report</h3>
-<div style="margin: 200px" id="pint_div">
+﻿@page "/whatToOrderReport"
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@inject IStockController _stockController
+
+<div id="pint_div">
     <div style="float:right;">
         <label>Date: </label>
-        <label>@Date</label>
+        <label>@Date </label>
     </div>
-    <h4>Order Report</h4>
+    <h3>Order Report</h3>
 </div>
-<input type="button" onclick="printdiv('pint_div')"  >
+
+    <table  cellspacing="5">
+        <thead>
+            <tr>
+                <th>Description  </th>
+                <th>Quatity to Order  </th>
+                <th>Supplier  </th>
+            </tr>
+        </thead>
+
+    @foreach (var stock in _acctiveStockToOrder)
+     {           
+            <tbody>
+            <tr>
+                <td>
+                    <label> @stock.Description </label>
+                </td>
+                <td>
+                    <label> @(stock.MaxQty-stock.CurrentQty) </label> 
+                </td>
+                <td>
+                    <label> @stock.SupplierDto.Name </label>
+                </td>
+            </tr>
+            </tbody>        
+     }
+    </table>
+
+
 @code {
+
+    private List<SupplierDto> _suppliers = new List<SupplierDto>();
+    private List<StockDto> _acctiveStockToOrder = new List<StockDto>();
+
     string Date = DateTime.Now.ToString("d");
 
+    protected override async Task OnInitializedAsync()
+    {
+        _suppliers = await _stockController.GetActiveSuppliers();
+        _acctiveStockToOrder = await _stockController.GetStockToOrder();
+    }
 }
