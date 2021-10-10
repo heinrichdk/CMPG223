@@ -39,7 +39,7 @@ namespace CMPG223.Services
     public class DatabaseService : IDatabaseService
     {
         private readonly string _databaseConnectionString =
-            $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
+            $"Data Source=PCD-MOREMOEK\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
 
         public async Task<List<Employee>> GetEmployees()
         {
