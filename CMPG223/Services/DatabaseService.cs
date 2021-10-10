@@ -12,7 +12,7 @@ namespace CMPG223.Services
 {
     public interface IDatabaseService
     {
-        Task<List<Order>>GetOrders();
+        Task<List<Order>> GetOrders();
         Task<List<Employee>> GetEmployees();
         Task<List<Employee>> GetEmployeesWhereActive();
         Task<List<Role>> GetRoles();
@@ -34,10 +34,17 @@ namespace CMPG223.Services
         Task<int> UpdateProject(Project createProjectEntity);
         Task<int> InsertProject(Project createProjectEntity);
         Task<int> InsertProjectType(ProjectType createProjectTypeEntity);
+        Task<List<Employee>> GetActiveEmployeesByRole(string role);
+        Task<List<Project>> GetActiveProjects();
+        Task<List<Stock>> GetActiveStock();
+        Task<int> StockCheckedOut(StockCheckedOut check);
     }
 
     public class DatabaseService : IDatabaseService
     {
+        //Morena String
+        // private readonly string _databaseConnectionString =
+        // $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
         private readonly string _databaseConnectionString =
             $"Data Source=DESKTOP-2CM60AH\\SQLEXPRESS;Initial Catalog=CMPG223;Integrated Security=True";
 
@@ -47,6 +54,7 @@ namespace CMPG223.Services
             var employees = connection.Query<Employee>("SELECT * FROM employees").ToList();
             return employees.Count == 0 ? new List<Employee>() : employees;
         }
+
         public async Task<List<Order>> GetOrders()
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
@@ -103,17 +111,20 @@ namespace CMPG223.Services
             return await connection.ExecuteAsync($"INSERT INTO Suppliers (Name, Email, ContactNumber, IsActive)" +
                                                  $" VALUES('{supplier.Name}','{supplier.Email}','{supplier.ContactNumber}','{supplier.IsActive}')");
         }
+
         public async Task<int> InsertOrder(Order order)
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
-            return await connection.ExecuteAsync($"INSERT INTO Orders (OderNumber, DatePlaced, DateRecieved, PlacedById)" +
-                                                 $" VALUES('{order.OderNumber}','{order.DatePlaced}','{order.DateRecieved}','{order.PlacedById}')");
+            return await connection.ExecuteAsync(
+                $"INSERT INTO Orders (OderNumber, DatePlaced, DateRecieved, PlacedById)" +
+                $" VALUES('{order.OderNumber}','{order.DatePlaced}','{order.DateRecieved}','{order.PlacedById}')");
         }
 
         public async Task<int> UpdateOrder(Order order)
         {
             await using var connection = new SqlConnection(_databaseConnectionString);
-            return await connection.ExecuteAsync($"UPDATE Orders SET   OderNumber='{order.OderNumber}', DatePlaced='{order.DatePlaced}', DateRecieved='{order.DateRecieved}'  WHERE OrderId = '{order.OrderId}'");
+            return await connection.ExecuteAsync(
+                $"UPDATE Orders SET   OderNumber='{order.OderNumber}', DatePlaced='{order.DatePlaced}', DateRecieved='{order.DateRecieved}'  WHERE OrderId = '{order.OrderId}'");
         }
 
         public async Task<int> UpdateSupplier(Supplier supplier)
@@ -188,6 +199,39 @@ namespace CMPG223.Services
             return await connection.ExecuteAsync(
                 $"INSERT INTO ProjectType (Discription, Name)" +
                 $" VALUES('{createProjectTypeEntity.Discription}','{createProjectTypeEntity.Name}')");
+        }
+
+        public async Task<List<Employee>> GetActiveEmployeesByRole(string role)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var sql =
+                $"SELECT e.* FROM Employees e JOIN Roles r ON r.RoleId = e.RoleFk WHERE r.RoleName = '{role}' AND e.IsActive = '1'";
+            var employees = connection
+                .Query<Employee>(sql)
+                .ToList();
+            return employees.Count == 0 ? new List<Employee>() : employees;
+        }
+
+        public async Task<List<Project>> GetActiveProjects()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var projects = connection.Query<Project>("SELECT * FROM Projects WHERE IsActive = '1'").ToList();
+            return projects.Count == 0 ? new List<Project>() : projects;
+        }
+
+        public async Task<List<Stock>> GetActiveStock()
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var stock = connection.Query<Stock>("SELECT * FROM Stock WHERE IsActive = '1'").ToList();
+            return stock.Count == 0 ? new List<Stock>() : stock;
+        }
+
+        public async Task<int> StockCheckedOut(StockCheckedOut check)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            return await connection.ExecuteAsync(
+                $"INSERT INTO StockCheckedOut (Qty , Date, StoreManagerFk, ArtisanFk, ProjectFk, StockFk)" +
+                $" VALUES('{check.Qty}','{check.Date}','{check.StoreManagerFk}','{check.ArtisanFk}','{check.ProjectFk}','{check.StockFk}')");
         }
     }
 }

@@ -88,10 +88,10 @@ else
                 </select>
             </td>
             <td>
-                <input @bind="_newStock.CurrentQty"/>
+                <input type="number" @bind="_newStock.CurrentQty"/>
             </td>
             <td>
-                <input @bind="_newStock.MaxQty"/>
+                <input type="number" @bind="_newStock.MaxQty"/>
             </td>
             <td>
                 <MudCheckBox @bind-Checked="@_newStock.IsActive"></MudCheckBox>

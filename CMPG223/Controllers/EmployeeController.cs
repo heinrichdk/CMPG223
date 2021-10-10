@@ -14,12 +14,14 @@ namespace CMPG223.Controllers
         Task<List<Role>> GetRoles();
         Task<bool> UpdateEmployee(EmployeeDto employeeDto);
         Task<bool> InsertEmployee(EmployeeDto employeeDto);
+        Task<List<EmployeeDto>> GetActiveEmployeeByRole(string role);
     }
 
 
     public class EmployeeController : IEmployeeController
     {
         private readonly IDatabaseService _databaseService;
+        private IEmployeeController _employeeControllerImplementation;
 
         public EmployeeController(IDatabaseService databaseService)
         {
@@ -92,6 +94,12 @@ namespace CMPG223.Controllers
             return false;
         }
 
+        public async Task<List<EmployeeDto>> GetActiveEmployeeByRole(string role)
+        {
+            var lst = new List<EmployeeDto>();
+            return await ConvertEmployeeListIntoDto( await _databaseService.GetActiveEmployeesByRole(role));
+        }
+
         private async Task<List<Employee>> GetEmployees()
         {
             return await _databaseService.GetEmployees();
@@ -101,30 +109,41 @@ namespace CMPG223.Controllers
         {
             var lst = new List<EmployeeDto>();
             var roles = await GetRoles();
-
             foreach (var emp in employees)
             {
-                var role = roles.First(x => x.RoleId == emp.RoleFk);
-                EmployeeDto eDto = new EmployeeDto
-                {
-                    EmployeeId = emp.EmployeeId,
-                    Name = emp.Name,
-                    Surname = emp.Surname,
-                    IsActive = emp.IsActive,
-                    Role = new Role()
-                    {
-                        RoleId = role.RoleId,
-                        RoleName = role.RoleName,
-                        Description = role.Description
-                    }
-                };
+                var eDto = await CreateEmployeeDto(emp, roles);
+              
                 lst.Add(eDto);
             }
 
             return lst;
         }
 
-        private bool CheckEmployeeDto(EmployeeDto employeeDto)
+        private async  Task<EmployeeDto> CreateEmployeeDto(Employee emp, List<Role> roles)
+        {
+            var role = roles.First(x => x.RoleId == emp.RoleFk);
+            return new EmployeeDto
+            {
+                EmployeeId = emp.EmployeeId,
+                Name = emp.Name,
+                Surname = emp.Surname,
+                IsActive = emp.IsActive,
+                Role = CreateRoleDto(role)
+            };
+        }
+
+        private Role CreateRoleDto(Role role)
+        {
+            return new Role()
+            {
+                RoleId = role.RoleId,
+                RoleName = role.RoleName,
+                Description = role.Description
+            };
+        }
+        
+
+            private bool CheckEmployeeDto(EmployeeDto employeeDto)
         {
             return !string.IsNullOrEmpty(employeeDto.Name) && !string.IsNullOrEmpty(employeeDto.Surname);
         }
