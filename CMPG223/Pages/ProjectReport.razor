@@ -19,10 +19,14 @@
     }
 </select>
 <br />
+<div style="margin-top:10px">
     <MudButton @onclick="@(GenerateReport)" Variant="Variant.Filled" Color="Color.Primary">Generate Report</MudButton>
+</div>
+    
 <br />
 @if (StockC.Count > 0)
 {
+    <div id="div_print">
 <h4>Project Report</h4>
 <table class="table">
     <thead>
@@ -68,6 +72,10 @@
 
     </tbody>
 </table>
+</div>
+    <div style="float:right; margin-right: 20px">
+        <input name="b_print" type="button" class="ipt" onClick="printdiv('div_print');" value=" Print ">
+    </div>
 }
 
 @code {
