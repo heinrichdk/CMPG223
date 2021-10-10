@@ -30,6 +30,9 @@ namespace CMPG223.Controllers
         Task<List<StockDto>> GetActiveStock();
         Task<bool> CheckItemsOut(List<StockCheckedOutDto> stockCheckedOutDtos);
         Task<List<StockDto>> StockBySupplier(Guid value);
+
+        Task<List<StockCheckedOutDto>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId, DateTime startDate,
+            DateTime endDate);
     }
 
     public class StockController : IStockController
@@ -224,7 +227,7 @@ namespace CMPG223.Controllers
         {
             return await _databaseService.InsertProject(CreateProjectEntity(newProject)) != 0;
         }
-        
+
 
         public async Task<bool> InsertProjectType(ProjectTypeDto newType)
         {
@@ -244,9 +247,8 @@ namespace CMPG223.Controllers
 
         public async Task<bool> CheckItemsOut(List<StockCheckedOutDto> stockCheckedOutDtos)
         {
-            foreach (var item  in stockCheckedOutDtos)
+            foreach (var item in stockCheckedOutDtos)
             {
-
                 var remainingStock = item.StockDto.CurrentQty - item.Qty;
                 Stock st = new Stock
                 {
@@ -268,7 +270,7 @@ namespace CMPG223.Controllers
                     ProjectFk = item.Project.ProjectId,
                     StockFk = item.StockDto.StockId
                 };
-                if( await _databaseService.StockCheckedOut(check) == 0)
+                if (await _databaseService.StockCheckedOut(check) == 0)
                     return false;
             }
 
@@ -277,8 +279,70 @@ namespace CMPG223.Controllers
 
         public async Task<List<StockDto>> StockBySupplier(Guid value)
         {
-            var stock =  await _databaseService.GetStockBySupplier(value);
+            var stock = await _databaseService.GetStockBySupplier(value);
             return await ConvertStockListIntoDto(stock);
+        }
+
+        public async Task<List<StockCheckedOutDto>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId,
+            DateTime startDate, DateTime endDate)
+        {
+            var checkedOutStock =
+                await _databaseService.GetCheckoutStockByStoreManager(selectedStoreManagerId, startDate, endDate);
+            var lst = new List<StockCheckedOutDto>();
+            var employees = await _databaseService.GetEmployeesWhereActive();
+            var projects = await _databaseService.GetProjects();
+            var stock = await _databaseService.GetAllStock();
+            foreach (var item in checkedOutStock)
+            {
+                var dt = new StockCheckedOutDto()
+                {
+                    Artisan = ConvertToEmployeeDto(employees.First(x => x.EmployeeId == item.ArtisanFk)),
+                    Project = ConvertToProject(projects.First(x => x.ProjectId == item.ProjectFk)),
+                    Qty = item.Qty,
+                    StockDto = ConvertToStockDto(stock.First((x => x.StockId == item.StockFk))),
+                    StoreManager = ConvertToEmployeeDto(employees.First(x => x.EmployeeId == item.StoreManagerFk)),
+                    StockCheckedOutId = item.StockCheckedOutId,
+                    Date = item.Date
+                };
+                lst.Add(dt);
+            }
+
+            return lst;
+        }
+
+        private StockDto ConvertToStockDto(Stock first)
+        {
+            return new StockDto()
+            {
+                Description = first.Discription,
+                CurrentQty = first.CurrentQty,
+                IsActive = first.IsActive,
+                MaxQty = first.MaxQty,
+                StockId = first.StockId,
+                SupplierDto = new SupplierDto()
+            };
+        }
+
+
+        private EmployeeDto ConvertToEmployeeDto(Employee emp)
+        {
+            return new EmployeeDto()
+            {
+                Name = emp.Name,
+                Role = new Role(),
+                Surname = emp.Surname,
+                EmployeeId = emp.EmployeeId
+            };
+        }
+
+        private ProjectDto ConvertToProject(Project pr)
+        {
+            return new ProjectDto()
+            {
+                ProjectId = pr.ProjectId,
+                ProjectNumber = pr.ProjectNumber,
+                ProjectType = new ProjectTypeDto()
+            };
         }
 
 

@@ -16,7 +16,6 @@ namespace CMPG223.Services
         Task<List<Employee>> GetEmployees();
         Task<List<Employee>> GetEmployeesWhereActive();
         Task<List<Role>> GetRoles();
-        Task<List<UserLogin>> GetUserLogins();
         Task<int> UpdateEmployee(Employee employee);
         Task<int> InsertEmployee(Employee employee);
         Task<List<Supplier>> GetSuppliers();
@@ -45,6 +44,7 @@ namespace CMPG223.Services
         Task<int> ReceiveOrderDetails(OrderDetails orderDetails);
         Task<int> ReceiveOrder(Order order);
         Task<int> UpdateStockQty(Stock st);
+        Task<List<StockCheckedOut>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId, DateTime startDate, DateTime endDate);
     }
 
     public class DatabaseService : IDatabaseService
@@ -84,13 +84,7 @@ namespace CMPG223.Services
             var roles = connection.Query<Role>("SELECT * FROM Roles").ToList();
             return roles.Count == 0 ? new List<Role>() : roles;
         }
-
-        public async Task<List<UserLogin>> GetUserLogins()
-        {
-            await using var connection = new SqlConnection(_databaseConnectionString);
-            var userLogins = connection.Query<UserLogin>("SELECT * FROM UserLogins").ToList();
-            return userLogins.Count == 0 ? new List<UserLogin>() : userLogins;
-        }
+        
 
         public async Task<int> UpdateEmployee(Employee employee)
         {
@@ -304,6 +298,16 @@ namespace CMPG223.Services
             await using var connection = new SqlConnection(_databaseConnectionString);
             return await connection.ExecuteAsync(
                 $"UPDATE Stock SET  CurrentQty = '{st.CurrentQty}' WHERE StockId = '{st.StockId}'");
+        }
+
+        public async Task<List<StockCheckedOut>> GetCheckoutStockByStoreManager(Guid selectedStoreManagerId, DateTime startDate, DateTime endDate)
+        {
+            await using var connection = new SqlConnection(_databaseConnectionString);
+            var st = connection
+                .Query<StockCheckedOut>(
+                    $"SELECT * FROM StockCheckedOut  WHERE StoreManagerFk = '{selectedStoreManagerId}' AND  CAST(Date AS DATE) <=  CAST('{endDate.Date}' AS DATE) AND CAST(Date AS DATE) >= CAST('{startDate.Date}' AS DATE)")
+                .ToList();
+            return st.Count == 0 ? new List<StockCheckedOut>() : st;
         }
     }
 }

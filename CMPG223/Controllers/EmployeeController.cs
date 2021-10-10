@@ -10,7 +10,6 @@ namespace CMPG223.Controllers
     public interface IEmployeeController
     {
         Task<List<EmployeeDto>> GetEmployeeRoles();
-        Task<List<UserLoginDto>> GetUserLoginDtos();
         Task<List<Role>> GetRoles();
         Task<bool> UpdateEmployee(EmployeeDto employeeDto);
         Task<bool> InsertEmployee(EmployeeDto employeeDto);
@@ -32,27 +31,6 @@ namespace CMPG223.Controllers
         {
             var employees = await GetEmployees();
             return await ConvertEmployeeListIntoDto(employees);
-        }
-
-
-        public async Task<List<UserLoginDto>> GetUserLoginDtos()
-        {
-            var employees = await GetEmployeesWhereActive();
-            var userLogins = await GetUserLogins();
-
-            return userLogins.Select(userLogin => new UserLoginDto()
-                {
-                    UserLoginId = userLogin.UserLoginId,
-                    UserName = userLogin.UserName,
-                    IsActive = userLogin.IsActive,
-                    Employee = employees.FirstOrDefault(x => x.EmployeeId == userLogin.EmployeeFk)
-                })
-                .ToList();
-        }
-
-        private async Task<List<UserLogin>> GetUserLogins()
-        {
-            return await _databaseService.GetUserLogins();
         }
 
         private async Task<List<EmployeeDto>> GetEmployeesWhereActive()

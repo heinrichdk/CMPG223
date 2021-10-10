@@ -1,6 +1,152 @@
 ﻿@page "/storemanagerreport"
-<h3>StoreManagerReport</h3>
+@using CMPG223.Controllers
+@using CMPG223.Dtos
+@inject IStockController _stockController
+@inject IEmployeeController _employeeController;
+<h3>Store Manager</h3>
+@if (hasError)
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled">@ErrorMessage</MudAlert>
+}
+<h2>Store Manager Report</h2>
+<table class="table">
+    <thead>
+    <tr>
+        <th>Store Manager</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+    </tr>
+    </thead>
+    <tbody>
+    <td>
+        <select @bind="SelectedStoreManagerId">
+            <option>--Select Store Manager--</option>
+            @foreach (var item in StoreManagers)
+            {
+                <option value="@item.EmployeeId">@item.Name @item.Surname</option>
+            }
+        </select>
+    </td>
+    <td>
+        <input type="date" @bind="StartDate"/>
+    </td>
+    <td>
+        <input type="date" @bind="EndDate"/>
+    </td>
+    <td>
+        <MudButton @onclick="@(GenerateReport)" Variant="Variant.Filled" Color="Color.Primary">Generate Report</MudButton>
+    </td>
+    </tbody>
+</table>
+
+<div id="div_print"
+     style="margin-top: 50px;">
+
+
+    <div style="float:right;">
+        <label>Date: </label>
+        <label>@Date </label>
+    </div>
+    
+    
+
+    @if (CheckedOutDtos.Count > 0)
+    {
+        <h3>
+            Store Manager report for
+            @{
+                var man = CheckedOutDtos.First().StoreManager;
+                string manger = man.Name + " " + man.Surname;
+            }
+            @manger
+            between @StartDate.ToShortDateString() and @EndDate.ToShortDateString()
+        </h3>
+
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Artisan</th>
+                <th>Project</th>
+                <th>Stock Item</th>
+                <th>Quantity</th>
+            </tr>
+            </thead>
+
+            @foreach (var stock in CheckedOutDtos)
+            {
+                <tbody>
+                <tr>
+                    <td>
+                        <label> @stock.Date </label>
+                    </td>
+                    <td>
+                        <label> @stock.Artisan.Name @stock.Artisan.Surname</label>
+                    </td>
+                    <td>
+                        <label> @stock.Project.ProjectNumber</label>
+                    </td>
+                    <td>
+                        <label> @stock.StockDto.Description</label>
+                    </td>
+                    <td>
+                        <label> @stock.Qty</label>
+                    </td>
+                </tr>
+                </tbody>
+            }
+        </table>
+    }
+</div>
+<div style="float:right; margin-right: 20px">
+    <input name="b_print" type="button" class="ipt" onClick="printdiv('div_print');" value=" Print ">
+</div>
 
 @code {
-    
+
+    private Guid _selectedStoreManagerId;
+
+    private Guid SelectedStoreManagerId
+    {
+        get => _selectedStoreManagerId;
+        set
+        {
+            _selectedStoreManagerId = value;
+            if (value != Guid.Empty)
+                _selectedEmployee = StoreManagers.First(x => x.EmployeeId == value);
+        }
+    }
+
+    bool hasError;
+    private string ErrorMessage;
+    private DateTime StartDate { get; set; } = DateTime.Now;
+    private DateTime EndDate { get; set; } = DateTime.Now;
+    private EmployeeDto _selectedEmployee;
+    private List<EmployeeDto> StoreManagers = new List<EmployeeDto>();
+    private List<StockCheckedOutDto> CheckedOutDtos = new List<StockCheckedOutDto>();
+
+    string Date = DateTime.Now.ToString("d");
+
+    protected override async Task OnInitializedAsync()
+    {
+        StoreManagers = await _employeeController.GetActiveEmployeeByRole("Store Manager");
+    }
+
+    private async Task GenerateReport()
+    {
+        if (EndDate < StartDate || SelectedStoreManagerId == Guid.Empty)
+        {
+            DisplayError("Please Validate all inputs");
+            return;
+        }
+        CheckedOutDtos = await _stockController.GetCheckoutStockByStoreManager(SelectedStoreManagerId, StartDate, EndDate);
+    }
+
+    private void DisplayError(string error)
+    {
+        hasError = true;
+        ErrorMessage = error;
+    }
+
 }

@@ -10,5 +10,6 @@ namespace CMPG223.Dtos
         public EmployeeDto StoreManager { get; set; } = new EmployeeDto();
         public ProjectDto Project { get; set; } = new ProjectDto();
         public  int Qty { get; set; }
+        public  DateTime Date { get; set; }
     }
 }
