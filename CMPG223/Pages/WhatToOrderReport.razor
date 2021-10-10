@@ -3,46 +3,45 @@
 @using CMPG223.Dtos
 @inject IStockController _stockController
 
-<div id="pint_div">
+<div id="div_print"
+     style="margin-top: 50px;">
     <div style="float:right;">
         <label>Date: </label>
         <label>@Date </label>
     </div>
     <h3>Order Report</h3>
-</div>
 
-<div id="report data">
     <table class="table">
         <thead>
-            <tr>
-                <th>Description  </th>
-                <th>Quatity to Order  </th>
-                <th>Supplier  </th>
-            </tr>
+        <tr>
+            <th>Description </th>
+            <th>Quatity to Order </th>
+            <th>Supplier </th>
+        </tr>
         </thead>
 
         @foreach (var stock in _acctiveStockToOrder)
-         {
+        {
             <tbody>
-                <tr>
-                    <td>
-                        <label> @stock.Description </label>
-                    </td>
-                    <td>
-                        <label> @(stock.MaxQty-stock.CurrentQty) </label>
-                    </td>
-                    <td>
-                        <label> @stock.SupplierDto.Name </label>
-                    </td>
-                </tr>
+            <tr>
+                <td>
+                    <label> @stock.Description </label>
+                </td>
+                <td>
+                    <label> @(stock.MaxQty - stock.CurrentQty) </label>
+                </td>
+                <td>
+                    <label> @stock.SupplierDto.Name </label>
+                </td>
+            </tr>
             </tbody>
-
-         }
+        }
     </table>
+
 </div>
-
-<button>Print</button>
-
+<div style="float:right; margin-right: 20px">
+    <input name="b_print" type="button" class="ipt" onClick="printdiv('div_print');" value=" Print ">
+</div>
 
 @code {
 
@@ -56,4 +55,5 @@
         _suppliers = await _stockController.GetActiveSuppliers();
         _acctiveStockToOrder = await _stockController.GetStockToOrder();
     }
+
 }
