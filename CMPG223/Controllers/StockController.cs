@@ -17,7 +17,6 @@ namespace CMPG223.Controllers
         Task<bool> InsertSupplier(SupplierDto supplierDto);
         Task<bool> UpdateSupplier(SupplierDto supplierDto);
         Task<List<SupplierDto>> GetActiveSuppliers();
-        Task<List<StockDto>> GetActiveStock();
         Task<List<StockDto>> GetStockToOrder();
         Task<bool> UpdateStock(StockDto selectedStock);
         Task<bool> InsertStock(StockDto newStock);
@@ -86,12 +85,6 @@ namespace CMPG223.Controllers
         {
             var suppliers = await _databaseService.GetActiveSuppliers();
             return ConvertSuppliersListToDto(suppliers);
-        }
-
-        public async Task<List<StockDto>> GetActiveStock()
-        {
-            var stock = await _databaseService.GetActiveStock();
-            return await ConvertStockListIntoDto(stock);
         }
 
         public async Task<List<StockDto>> GetStockToOrder()
